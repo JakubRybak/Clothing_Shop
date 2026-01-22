@@ -108,19 +108,35 @@ def generate_product_features(product_id):
 
 def process_search_query(user_query, current_category_name=None):
     """
-    Process natural language search query using direct LLM analysis (No Embeddings).
+    Process natural language search query using a hybrid approach:
+    1. Redis (Cache)
+    2. PostgreSQL (Permanent History)
+    3. Gemini AI (Fresh generation)
     """
+    from .models import SearchQuery  # Import here to avoid circular dependencies
+
     try:
-        # --- Caching Layer ---
-        # Create a unique key for this combination of query + context
-        cache_key = f"search_ai_v2_{user_query}_{current_category_name}".replace(" ", "_").lower()
-        cached_result = cache.get(cache_key)
+        query_normalized = user_query.strip().lower()
         
+        # --- 1. REDIS CACHE LAYER ---
+        cache_key = f"search_ai_v2_{query_normalized}_{current_category_name}".replace(" ", "_").lower()
+        cached_result = cache.get(cache_key)
         if cached_result:
-            print(f"DEBUG: Cache HIT for '{user_query}'")
+            print(f"DEBUG: Redis HIT for '{query_normalized}'")
             return cached_result
             
-        print(f"DEBUG: Cache MISS for '{user_query}' - Calling Gemini...")
+        # --- 2. POSTGRESQL LAYER ---
+        db_query = SearchQuery.objects.filter(query_text=query_normalized).first()
+        if db_query:
+            print(f"DEBUG: PostgreSQL HIT for '{query_normalized}'")
+            db_query.count += 1
+            db_query.save(update_fields=['count'])
+            
+            # Save back to Redis for next time
+            cache.set(cache_key, db_query.result_data, timeout=86400)
+            return db_query.result_data
+
+        print(f"DEBUG: Cache/DB MISS for '{query_normalized}' - Calling Gemini...")
         
         schemas = load_category_schemas()
         
@@ -277,7 +293,17 @@ def process_search_query(user_query, current_category_name=None):
         
         print(f"DEBUG: '{user_query}' -> extracted: {result}")
         
-        # Cache the successful result
+        # --- 4. SAVE TO PERSISTENT STORAGE & CACHE ---
+        # Save to PostgreSQL
+        SearchQuery.objects.update_or_create(
+            query_text=query_normalized,
+            defaults={
+                'category_name': target_category,
+                'result_data': result
+            }
+        )
+        
+        # Cache the successful result in Redis
         cache.set(cache_key, result, timeout=86400) # Cache for 24 hours
         
         return result

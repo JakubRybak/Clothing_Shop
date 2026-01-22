@@ -1,4 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
 from django.db.models import Q
 from django.db.models.functions import Lower
 from django.urls import reverse
@@ -742,12 +744,24 @@ def visual_search(request):
             except Exception as e:
                 return JsonResponse({'error': str(e)}, status=400)
 
-        
         # Default: Detect People (Action not specified or implies detect people)
         if request.FILES.get('image'):
-             image_file = request.FILES['image']
-             user_prompt = request.POST.get('prompt')
-             people = api_detect_people(image_file, user_context=user_prompt)
-             return JsonResponse({'people': people})
-        
+            image_file = request.FILES['image']
+            user_prompt = request.POST.get('prompt')
+            people = api_detect_people(image_file, user_context=user_prompt)
+            return JsonResponse({'people': people})
+            
     return render(request, 'store/visual_search/index.html')
+
+
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('product_list')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
+    

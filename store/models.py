@@ -68,6 +68,21 @@ class ProductVariant(models.Model):
     def __str__(self):
         return f"{self.product.name} - {self.color} ({self.brightness}) - {self.size}"
 
+class SearchQuery(models.Model):
+    query_text = models.CharField(max_length=255, unique=True)
+    category_name = models.CharField(max_length=100, blank=True, null=True)
+    # Store the extracted filter data (colors, filters, suggestions) as JSON
+    result_data = models.JSONField()
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    count = models.PositiveIntegerField(default=1, help_text="How many times this query was made")
+
+    class Meta:
+        verbose_name_plural = "Search Queries"
+
+    def __str__(self):
+        return self.query_text
+
 class ProductImage(models.Model):
     """
     An image for a specific ProductVariant.

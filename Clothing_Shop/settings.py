@@ -130,13 +130,25 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Caching for AI Results
+# Caching for AI Results (using Redis)
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'unique-snowflake',
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
     }
 }
 
 # HTMX Configuration: Exclude admin URLs
+
 HTMX_URL_FILTER = 'Clothing_Shop.htmx_filters.is_htmx_request_allowed'
+
+
+
+# Authentication redirects
+
+LOGIN_REDIRECT_URL = 'product_list'
+
+LOGOUT_REDIRECT_URL = 'product_list'
