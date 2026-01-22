@@ -1,0 +1,114 @@
+/* Sidebar Styling */
+#category-sidebar {
+    position: fixed;
+    left: -200px; /* Peeking out by 40px */
+    top: 70px;
+    bottom: 0;
+    width: 240px;
+    background: #fff;
+    transition: left 0.3s ease;
+    z-index: 1030;
+    padding: 20px 10px;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+    border-right: 1px solid #dee2e6;
+}
+
+/* Active class for JS control */
+#category-sidebar.sidebar-open {
+    left: 0;
+}
+
+/* The handle that stays visible */
+#category-sidebar::after {
+    content: '☰ Categories';
+    position: absolute;
+    right: -40px;
+    top: 20px;
+    background: #212529;
+    color: #fff;
+    padding: 10px 5px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+/* Filter Sidebar (Right Side) */
+#filter-sidebar {
+    position: fixed; /* Explicitly set position for right sidebar as well, or rely on shared class if element has it */
+    right: -200px; /* Peeking out by 40px */
+    top: 70px; /* Redundant if using shared class but kept for safety if class missing */
+    bottom: 0;
+    width: 240px;
+    background: #fff;
+    z-index: 1030;
+    overflow: visible;
+    transition: right 0.3s ease;
+    box-shadow: -2px 0 10px rgba(0,0,0,0.1);
+    border-left: 1px solid #dee2e6;
+}
+
+#filter-sidebar.sidebar-open {
+    right: 0;
+}
+
+/* Filter Handle */
+#filter-sidebar::after {
+    content: '☰ Filters';
+    position: absolute;
+    left: -40px;
+    top: 20px;
+    background: #212529;
+    color: #fff;
+    padding: 10px 5px;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    border-radius: 5px 0 0 5px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+/* Shared Sidebar Styling */
+.sidebar-panel {
+    position: fixed;
+    top: 70px;
+    bottom: 0;
+    width: 240px;
+    background: #fff;
+    z-index: 1030;
+    overflow: visible; /* Handle visibility */
+}
+
+/* Inner scrollable container */
+.sidebar-content {
+    height: 100%;
+    overflow-y: auto;
+    padding: 20px 10px;
+}
+
+/* Wrapper to push content right */
+.content-wrapper {
+    padding-left: 60px;
+    padding-right: 60px; 
+}
+
+/* Adjust main content when sidebar is out */
+.main-content {
+    transition: margin-left 0.3s ease;
+}
+
+/* HTMX Loading Indicator Logic */
+.search-spinner {
+    display: none;
+}
+
+.htmx-request .search-spinner {
+    display: inline-block;
+}
+
+.htmx-request .search-icon-text {
+    display: none;
+}

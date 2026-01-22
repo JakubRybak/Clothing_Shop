@@ -1,0 +1,127 @@
+{% load store_filters %}
+<h5 class="px-3 mb-3 border-bottom pb-2 mt-3">Filters</h5>
+<div class="px-3">
+    <form method="get" 
+            hx-get="{{ request.path }}" 
+            hx-target="#grid-container" 
+            hx-trigger="change, keyup delay:500ms from:input[type='number']"
+            hx-swap="innerHTML"
+            hx-push-url="true"
+            hx-include="#searchForm"
+            hx-indicator="#search-btn">
+        
+        <!-- Price Filter -->
+        <div class="mb-4">
+            <label class="form-label fw-bold">Price Range</label>
+            <div class="d-flex gap-2">
+                <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ request.GET.min_price }}">
+                <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ request.GET.max_price }}">
+            </div>
+        </div>
+
+        <!-- Color Filter -->
+        <div class="mb-4">
+            <label class="form-label fw-bold">Color</label>
+            {% for color in all_colors %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="colors" value="{{ color|lower }}" id="color-{{ color|lower }}"
+                    {% if color|lower in selected_colors %}checked{% endif %}>
+                <label class="form-check-label" for="color-{{ color|lower }}">
+                    {{ color }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Size Filter -->
+        <div class="mb-4">
+            <label class="form-label fw-bold">Size</label>
+            <div class="d-flex flex-wrap gap-2">
+                {% for size in all_sizes %}
+                <div>
+                    <input type="checkbox" class="btn-check" name="sizes" value="{{ size }}" id="size-{{ size }}" autocomplete="off"
+                        {% if size in selected_sizes %}checked{% endif %}>
+                    <label class="btn btn-outline-secondary btn-sm" for="size-{{ size }}">{{ size }}</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Brightness Filter - NEW -->
+        {% if all_available_brightness_values %}
+        <div class="mb-4">
+            <label class="form-label fw-bold">Brightness</label>
+            {% for brightness in all_available_brightness_values %}
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="feat_brightness" value="{{ brightness }}" id="brightness-{{ brightness }}"
+                    {% if brightness in selected_brightness %}checked{% endif %}>
+                <label class="form-check-label text-capitalize" for="brightness-{{ brightness }}">
+                    {{ brightness }}
+                </label>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <!-- END Brightness Filter -->
+
+        <!-- AI Features Filters -->
+        {% if available_features %}
+        <hr>
+        <h6 class="fw-bold mb-3">Category Features</h6>
+        {% for attr in available_features %}
+        <div class="mb-4">
+            <label class="form-label fw-bold text-capitalize d-flex align-items-center" style="font-size: 0.9rem;">
+                {{ attr.question }}
+                {% if attribute_suggestions|get_item:attr.key %}
+                    <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ attribute_suggestions|get_item:attr.key }}"></i>
+                {% endif %}
+            </label>
+            
+            {% if attr.type == 'boolean' %}
+                <div class="d-flex flex-column gap-1">
+                    <!-- Any (Clear) -->
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="" id="feat-{{ attr.key }}-any"
+                            {% if not attr.selected_values or '' in attr.selected_values %}checked{% endif %}>
+                        <label class="form-check-label text-muted" for="feat-{{ attr.key }}-any">Any</label>
+                    </div>
+                    <!-- Yes -->
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="true" id="feat-{{ attr.key }}-yes"
+                            {% if True in attr.selected_values %}checked{% endif %}>
+                        <label class="form-check-label" for="feat-{{ attr.key }}-yes">Yes</label>
+                    </div>
+                    <!-- No -->
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="false" id="feat-{{ attr.key }}-no"
+                            {% if False in attr.selected_values %}checked{% endif %}>
+                        <label class="form-check-label" for="feat-{{ attr.key }}-no">No</label>
+                    </div>
+                </div>
+            {% elif attr.options %}
+                <div class="d-flex flex-column gap-1">
+                {% for option in attr.options %}
+                    {% if option|lower != 'unknown' %}
+                    <div class="form-check">
+                        <input class="form-check-input" 
+                               type="checkbox" 
+                               name="feat_{{ attr.key }}" 
+                               value="{{ option }}" 
+                               id="feat-{{ attr.key }}-{{ option }}"
+                               {% if option|lower in attr.selected_values %}checked{% endif %}>
+                        <label class="form-check-label text-capitalize" for="feat-{{ attr.key }}-{{ option }}">
+                            {{ option }}
+                        </label>
+                    </div>
+                    {% endif %}
+                {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <button type="submit" class="btn btn-dark w-100">Apply Filters</button>
+        <a href="{{ request.path }}" class="btn btn-link w-100 mt-2 text-decoration-none text-muted">Clear Filters</a>
+    </form>
+</div>

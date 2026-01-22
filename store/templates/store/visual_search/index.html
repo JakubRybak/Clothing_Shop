@@ -1,0 +1,482 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .resizable-box {
+        position: absolute;
+        border: 3px solid #0d6efd;
+        background-color: rgba(13, 110, 253, 0.2);
+        cursor: pointer;
+        border-radius: 4px;
+    }
+    .resize-handle {
+        position: absolute;
+        width: 10px;
+        height: 10px;
+        background-color: #0d6efd;
+        border: 1px solid #fff;
+        border-radius: 50%;
+    }
+    .resize-handle.top-left { top: -5px; left: -5px; cursor: nwse-resize; }
+    .resize-handle.top-right { top: -5px; right: -5px; cursor: nesw-resize; }
+    .resize-handle.bottom-left { bottom: -5px; left: -5px; cursor: nesw-resize; }
+    .resize-handle.bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
+</style>
+<div class="container py-5" style="max-width: 800px;">
+    <h1 class="text-center mb-4">Visual AI Stylist</h1>
+    <p class="text-center text-muted mb-5">Upload a photo and let our AI find matching items from our store.</p>
+
+    <!-- Step 1: Upload -->
+    <div id="step-upload" class="card shadow-sm border-0">
+        <div class="card-body p-5 text-center">
+            <div class="mb-4">
+                <span class="display-1">📸</span>
+            </div>
+            <h3>Upload a Photo</h3>
+            <p class="text-muted">Supports JPG, PNG (Max 5MB)</p>
+            
+            <form id="upload-form" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="file" name="image" id="image-input" class="form-control mb-3" accept="image/*" required>
+                <div class="form-floating mb-3 text-start">
+                    <input type="text" name="prompt" class="form-control" id="prompt-input" placeholder="e.g. Find the coat">
+                    <label for="prompt-input">Optional: What are we looking for?</label>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">Analyze Image</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Step 2: Person Selection (Hidden) -->
+    <div id="step-person" class="card shadow-sm border-0 d-none">
+        <div class="card-body p-4">
+            <h4 class="mb-3">Who should we style?</h4>
+            <p class="text-muted">We found multiple people. Click on the person you want to match.</p>
+            <div id="image-container" class="position-relative d-inline-block">
+                <!-- Image and Boxes will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Step 3: Item Confirmation (Hidden) -->
+    <div id="step-items" class="card shadow-sm border-0 d-none">
+        <div class="card-body p-4">
+            <h4 class="mb-3">Found Items</h4>
+            <p class="text-muted">Select the items you want to find in our store.</p>
+            <div id="detected-items-list" class="list-group mb-3">
+                <!-- Items populated by JS -->
+            </div>
+            
+            <button id="confirm-items-btn" class="btn btn-success w-100 mt-3">Find These Items</button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="d-none text-center py-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3 lead" id="loading-text">Analyzing...</p>
+    </div>
+
+</div>
+
+<script>
+    let globalFile = null; 
+    let globalPrompt = "";
+    let isDraggingOrResizing = false;
+
+    document.getElementById('upload-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const fileInput = document.getElementById('image-input');
+        globalFile = fileInput.files[0]; 
+        globalPrompt = document.getElementById('prompt-input').value;
+        
+        const formData = new FormData(this);
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const uploadStep = document.getElementById('step-upload');
+        const personStep = document.getElementById('step-person');
+        const imageContainer = document.getElementById('image-container');
+        
+        loadingOverlay.classList.remove('d-none');
+        uploadStep.classList.add('d-none');
+        
+        fetch("{% url 'visual_search' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingOverlay.classList.add('d-none');
+            
+            if (data.people && data.people.length > 0) {
+                personStep.classList.remove('d-none');
+                const imgUrl = URL.createObjectURL(globalFile);
+                const img = document.createElement('img');
+                img.src = imgUrl;
+                img.style.maxWidth = '100%';
+                img.style.borderRadius = '8px';
+                img.id = 'target-image'; 
+                
+                img.onload = function() {
+                    imageContainer.innerHTML = ''; 
+                    imageContainer.appendChild(img);
+                    
+                    data.people.forEach(person => {
+                        const box = document.createElement('div');
+                        box.className = 'resizable-box';
+                        
+                        const imgRect = img.getBoundingClientRect();
+                        const containerRect = imageContainer.getBoundingClientRect();
+
+                        // Convert 1000-scale to pixels relative to the container
+                        box.style.top = `${(person.box_2d[0] / 1000) * imgRect.height}px`;
+                        box.style.left = `${(person.box_2d[1] / 1000) * imgRect.width}px`;
+                        box.style.height = `${((person.box_2d[2] - person.box_2d[0]) / 1000) * imgRect.height}px`;
+                        box.style.width = `${((person.box_2d[3] - person.box_2d[1]) / 1000) * imgRect.width}px`;
+                        
+                        // Main click action
+                        box.addEventListener('click', () => {
+                            if (isDraggingOrResizing) {
+                                return;
+                            }
+                            selectPerson(person);
+                        });
+                        box.onmouseover = () => { if (!box.classList.contains('resizing')) box.style.backgroundColor = 'rgba(13, 110, 253, 0.4)'; };
+                        box.onmouseout = () => { if (!box.classList.contains('resizing')) box.style.backgroundColor = 'rgba(13, 110, 253, 0.2)'; };
+
+                        // Create and append handles
+                        const handles = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+                        handles.forEach(handlePos => {
+                            const handle = document.createElement('div');
+                            handle.className = `resize-handle ${handlePos}`;
+                            box.appendChild(handle);
+                            handle.addEventListener('mousedown', (e) => initResize(e, box, person, handlePos));
+                        });
+                        
+                        imageContainer.appendChild(box);
+                    });
+                };
+            } else {
+                alert('No people detected! Try a different photo.');
+                uploadStep.classList.remove('d-none');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            loadingOverlay.classList.add('d-none');
+            uploadStep.classList.remove('d-none');
+            alert('Something went wrong.');
+        });
+    });
+
+    let activeBox = null;
+    let activePerson = null; 
+    let activeHandle = '';
+    let startX, startY, startWidth, startHeight, startTop, startLeft;
+
+    function initResize(e, box, person, handlePos) {
+        e.stopPropagation();
+        e.preventDefault();
+        isDraggingOrResizing = true;
+
+        activeBox = box;
+        activePerson = person;
+        activeHandle = handlePos;
+        
+        startX = e.clientX;
+        startY = e.clientY;
+        startWidth = parseInt(document.defaultView.getComputedStyle(box).width, 10);
+        startHeight = parseInt(document.defaultView.getComputedStyle(box).height, 10);
+        startTop = parseInt(document.defaultView.getComputedStyle(box).top, 10);
+        startLeft = parseInt(document.defaultView.getComputedStyle(box).left, 10);
+
+        box.classList.add('resizing');
+
+        document.addEventListener('mousemove', doResize);
+        document.addEventListener('mouseup', stopResize);
+    }
+
+    function doResize(e) {
+        if (!activeBox) return;
+
+        const img = document.getElementById('target-image');
+        const imageMinX = img.offsetLeft;
+        const imageMinY = img.offsetTop;
+        const imageMaxX = img.offsetLeft + img.clientWidth;
+        const imageMaxY = img.offsetTop + img.clientHeight;
+        
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+
+        let newWidth = startWidth;
+        let newHeight = startHeight;
+        let newTop = startTop;
+        let newLeft = startLeft;
+
+        const minSize = 20; // Minimum size for the box
+
+        // Calculate potential new values based on handle
+        if (activeHandle.includes('right')) {
+            newWidth = startWidth + dx;
+        }
+        if (activeHandle.includes('bottom')) {
+            newHeight = startHeight + dy;
+        }
+        if (activeHandle.includes('left')) {
+            newWidth = startWidth - dx;
+            newLeft = startLeft + dx;
+        }
+        if (activeHandle.includes('top')) {
+            newHeight = startHeight - dy;
+            newTop = startTop + dy;
+        }
+        
+        // Apply minimum size constraints
+        newWidth = Math.max(minSize, newWidth);
+        newHeight = Math.max(minSize, newHeight);
+
+        // Clamp newLeft
+        if (newLeft < imageMinX) {
+            newWidth -= (imageMinX - newLeft); // Reduce width if left edge goes too far left
+            newLeft = imageMinX;
+        }
+        // Clamp newTop
+        if (newTop < imageMinY) {
+            newHeight -= (imageMinY - newTop); // Reduce height if top edge goes too far up
+            newTop = imageMinY;
+        }
+        
+        // Clamp newWidth to stay within right boundary
+        if (newLeft + newWidth > imageMaxX) {
+            newWidth = imageMaxX - newLeft;
+        }
+        // Clamp newHeight to stay within bottom boundary
+        if (newTop + newHeight > imageMaxY) {
+            newHeight = imageMaxY - newTop;
+        }
+
+        // Apply the clamped values to the activeBox style
+        activeBox.style.width = `${newWidth}px`;
+        activeBox.style.height = `${newHeight}px`;
+        activeBox.style.top = `${newTop}px`;
+        activeBox.style.left = `${newLeft}px`;
+    }
+
+    function stopResize() {
+        if (!activeBox) return;
+        
+        updatePersonBox(activePerson);
+
+        activeBox.classList.remove('resizing');
+        activeBox = null;
+        document.removeEventListener('mousemove', doResize);
+        document.removeEventListener('mouseup', stopResize);
+
+        setTimeout(() => {
+            isDraggingOrResizing = false;
+        }, 0);
+    }
+
+    function updatePersonBox(person) {
+        if (!activeBox || !person) return;
+        const img = document.getElementById('target-image');
+        const imgRect = img.getBoundingClientRect();
+
+        const newTop = parseInt(activeBox.style.top, 10);
+        const newLeft = parseInt(activeBox.style.left, 10);
+        const newHeight = parseInt(activeBox.style.height, 10);
+        const newWidth = parseInt(activeBox.style.width, 10);
+
+        // Convert back to 0-1000 scale and update the person object
+        person.box_2d[0] = (newTop / imgRect.height) * 1000;
+        person.box_2d[1] = (newLeft / imgRect.width) * 1000;
+        person.box_2d[2] = ((newTop + newHeight) / imgRect.height) * 1000;
+        person.box_2d[3] = ((newLeft + newWidth) / imgRect.width) * 1000;
+        
+        console.log("Updated box coordinates:", person.box_2d);
+    }
+
+
+    function selectPerson(person) {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const personStep = document.getElementById('step-person');
+        const itemsStep = document.getElementById('step-items');
+        const itemsList = document.getElementById('detected-items-list');
+        
+        personStep.classList.add('d-none');
+        loadingOverlay.classList.remove('d-none');
+        document.getElementById('loading-text').innerText = "Identifying items on " + person.label + "...";
+        
+        const formData = new FormData();
+        formData.append('image', globalFile);
+        formData.append('action', 'identify_items');
+        formData.append('box', JSON.stringify(person.box_2d)); // Use the updated coordinates
+        formData.append('prompt', globalPrompt);
+        
+        fetch("{% url 'visual_search' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            loadingOverlay.classList.add('d-none');
+            itemsStep.classList.remove('d-none');
+            itemsList.innerHTML = '';
+            
+            if (data.items && data.items.length > 0) {
+                data.items.forEach((item, index) => {
+                    const itemId = `item-${index}`;
+                    let featuresHtml = '';
+                    
+                    if (item.color) {
+                        featuresHtml += `
+                            <div class="form-check">
+                                <input class="form-check-input filter-checkbox" type="checkbox" value="${item.color}" id="${itemId}-color" data-type="color" checked onchange="updateShopLink('${itemId}', '${item.category}')">
+                                <label class="form-check-label small" for="${itemId}-color">Color: ${item.color}</label>
+                            </div>`;
+                    }
+                    if (item.features) {
+                        for (const [key, value] of Object.entries(item.features)) {
+                            featuresHtml += `
+                                <div class="form-check">
+                                    <input class="form-check-input filter-checkbox" type="checkbox" value="${value}" id="${itemId}-${key}" data-type="feature" data-key="${key}" checked onchange="updateShopLink('${itemId}', '${item.category}')">
+                                    <label class="form-check-label small" for="${itemId}-${key}">${key.replace(/_/g, ' ')}: ${value}</label>
+                                </div>`;
+                        }
+                    }
+
+                    const itemHtml = `
+                        <div class="list-group-item" id="${itemId}" data-category="${item.category}">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">${item.name}</h6>
+                                    <span class="badge bg-secondary" style="font-size: 0.7em;">${item.category}</span>
+                                </div>
+                                <a href="#" id="${itemId}-btn" class="btn btn-outline-primary btn-sm" target="_blank">Shop This</a>
+                            </div>
+                            <div class="border-top pt-2 mt-2">
+                                <span class="text-muted small d-block mb-1">Detected Filters:</span>
+                                <div class="d-flex flex-wrap gap-3">${featuresHtml}</div>
+                            </div>
+                            <div id="examples-${itemId}" class="mt-3"></div> <!-- Container for examples inside the item -->
+                        </div>`;
+                    itemsList.insertAdjacentHTML('beforeend', itemHtml);
+                    updateShopLink(itemId, item.category);
+                });
+                
+                // Render example products into their respective containers
+                renderExampleProducts(data.example_products); 
+                
+                document.getElementById('confirm-items-btn').classList.add('d-none');
+            } else {
+                itemsList.innerHTML = '<p class="text-center">No distinct clothing items found.</p>';
+            }
+        });
+    }
+
+    function updateShopLink(itemId, category) {
+        const container = document.getElementById(itemId);
+        const btn = document.getElementById(`${itemId}-btn`);
+        const checkboxes = container.querySelectorAll('.filter-checkbox:checked');
+        
+        const params = new URLSearchParams();
+        params.append('target_category', category); 
+        
+        checkboxes.forEach(cb => {
+            if (cb.dataset.type === 'color') {
+                params.append('colors', cb.value);
+            } else if (cb.dataset.type === 'feature') {
+                params.append(`feat_${cb.dataset.key}`, cb.value);
+            }
+        });
+        
+        const baseUrl = "{% url 'product_list' %}";
+        btn.href = `${baseUrl}?${params.toString()}`;
+        
+        // Refresh examples when filters change
+        fetchMatchingExamples();
+    }
+
+    function fetchMatchingExamples() {
+        const items = [];
+        const itemElements = document.querySelectorAll('#detected-items-list .list-group-item');
+        
+        itemElements.forEach(el => {
+            const category = el.dataset.category; 
+            const checkedColor = el.querySelector('.filter-checkbox[data-type="color"]:checked');
+            const checkedFeatures = el.querySelectorAll('.filter-checkbox[data-type="feature"]:checked');
+            
+            const itemData = {
+                category: category,
+                color: checkedColor ? checkedColor.value : null,
+                features: {}
+            };
+            
+            checkedFeatures.forEach(cb => {
+                itemData.features[cb.dataset.key] = cb.value;
+            });
+            
+            items.push(itemData);
+        });
+
+        const formData = new FormData();
+        formData.append('action', 'filter_examples');
+        formData.append('items_data', JSON.stringify(items));
+
+        fetch("{% url 'visual_search' %}", {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            renderExampleProducts(data.example_products);
+        })
+        .catch(console.error);
+    }
+
+    function renderExampleProducts(groupedExamples) {
+        if (!groupedExamples || groupedExamples.length === 0) return;
+
+        groupedExamples.forEach((group, index) => {
+            const container = document.getElementById(`examples-item-${index}`); // Target the specific item container
+            if (!container) return;
+            
+            container.innerHTML = ''; // Clear previous
+
+            if (group.products && group.products.length > 0) {
+                const header = document.createElement('h6');
+                header.className = 'mb-2 small text-muted';
+                header.innerText = 'Similar items from our store:';
+                container.appendChild(header);
+
+                const row = document.createElement('div');
+                row.className = 'd-flex gap-2 overflow-auto pb-2'; // Horizontal scroll for better compact view
+
+                group.products.forEach(product => {
+                    const col = document.createElement('div');
+                    col.style.minWidth = '120px'; 
+                    col.innerHTML = `
+                        <div class="card h-100 shadow-sm border-0" style="width: 120px;">
+                            <img src="${product.image_url}" class="card-img-top rounded" alt="${product.product_name}" style="height: 120px; width: 120px; object-fit: contain; background-color: #f8f9fa;">
+                            <a href="#" class="stretched-link"></a>
+                        </div>
+                    `;
+                    // Replace SLUG_PLACEHOLDER with actual slug.
+                    const productDetailUrl = "{% url 'product_detail' 'SLUG_PLACEHOLDER' %}".replace('SLUG_PLACEHOLDER', product.product_slug);
+                    col.querySelector('a').href = productDetailUrl;
+
+                    row.appendChild(col);
+                });
+                container.appendChild(row);
+            } else {
+                 container.innerHTML = '<span class="text-muted small fst-italic">No matches found.</span>';
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,66 @@
+<div class="d-flex flex-column flex-grow-1" id="search-input-area" hx-swap-oob="true">
+    {% for contrib in query_contributions %}
+    <div class="input-group mb-1" style="max-width: 90%;">
+        <span class="input-group-text py-1 px-2 bg-light border-end-0 
+            {% if contrib.is_contradictory %}text-danger
+            {% elif contrib.is_empty %}text-warning
+            {% else %}text-success{% endif %}">
+            {% if contrib.is_contradictory %}
+                <small>⛔</small>
+            {% elif contrib.is_empty %}
+                <small>⚠️</small>
+            {% else %}
+                <small>✓</small>
+            {% endif %}
+        </span>
+        
+        <div class="form-control py-1 border-start-0 bg-light d-flex align-items-center overflow-hidden {% if contrib.is_contradictory %}border-danger-subtle{% endif %}">
+            <span class="text-dark fw-bold me-2">{{ contrib.query }}</span>
+            
+            {% if contrib.is_contradictory %}
+                <span class="text-danger small fst-italic">({{ contrib.contradiction_msg }})</span>
+            {% else %}
+                {% if contrib.category %}
+                    <span class="badge bg-secondary me-1" style="font-size: 0.7em;">Cat: {{ contrib.category }}</span>
+                {% endif %}
+                
+                {% for color in contrib.colors %}
+                     <span class="badge bg-success me-1" style="font-size: 0.7em;">{{ color }}</span>
+                {% endfor %}
+                
+                {% for k, v in contrib.filters.items %}
+                    <span class="badge bg-info text-dark me-1" style="font-size: 0.7em;">{{ k|title }}: {{ v|join:', ' }}</span>
+                {% endfor %}
+                
+                <!-- Negative Filters -->
+                {% for color in contrib.negative_colors %}
+                     <span class="badge border border-danger text-danger bg-white me-1" style="font-size: 0.7em;">Not: {{ color }}</span>
+                {% endfor %}
+                
+                {% for k, v in contrib.negative_filters.items %}
+                    <span class="badge border border-danger text-danger bg-white me-1" style="font-size: 0.7em;">Not: {{ k|title }} ({{ v|join:', ' }})</span>
+                {% endfor %}
+                
+                {% if contrib.is_empty %}
+                    <span class="text-muted ms-auto fst-italic" style="font-size: 0.8em;">(No specific filters detected)</span>
+                {% endif %}
+            {% endif %}
+        </div>
+
+        <input type="hidden" name="q" value="{{ contrib.query }}">
+        <button class="btn btn-outline-secondary btn-sm border-start-0" type="button" onclick="removeQuery(this)">×</button>
+    </div>
+    {% endfor %}
+    
+    <div class="d-flex w-100">
+        <input class="form-control me-2" type="search" name="q" 
+               placeholder="{% if query_contributions %}Add another condition (e.g. 'black'){% else %}Search (e.g. 'Dark coat with belt'){% endif %}" 
+               aria-label="Search" autofocus>
+        <button class="btn btn-outline-success" type="submit" id="search-btn">
+            <span class="search-icon-text">Search</span>
+            <div class="spinner-border spinner-border-sm search-spinner" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </button>
+    </div>
+</div>

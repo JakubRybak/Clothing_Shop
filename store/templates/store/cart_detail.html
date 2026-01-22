@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<h1 class="mb-4">Shopping Cart</h1>
+
+{% if cart %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Product</th>
+                    <th>Details</th>
+                    <th>Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart %}
+                <tr>
+                    <td>
+                        <a href="{% url 'product_detail' item.variant.product.slug %}" class="text-decoration-none text-dark fw-bold">
+                            {{ item.variant.product.name }}
+                        </a>
+                    </td>
+                    <td>
+                        Color: {{ item.variant.color }}<br>
+                        Size: {{ item.variant.size }}
+                    </td>
+                    <td>${{ item.price }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>${{ item.total_price }}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td colspan="4" class="text-end fw-bold">Total Price:</td>
+                    <td class="fw-bold">${{ cart.get_total_price }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="d-flex justify-content-between mt-3">
+        <div>
+            <a href="{% url 'product_list' %}" class="btn btn-outline-primary me-2">Continue Shopping</a>
+            <a href="{% url 'clear_cart' %}" class="btn btn-danger">Clear Cart</a>
+        </div>
+        <a href="#" class="btn btn-success">Checkout</a>
+    </div>
+
+{% else %}
+    <p>Your cart is empty.</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary">Continue Shopping</a>
+{% endif %}
+
+{% endblock %}

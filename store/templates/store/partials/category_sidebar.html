@@ -1,0 +1,17 @@
+<!-- Side Category Panel -->
+<div id="category-sidebar" class="sidebar-panel" hx-swap-oob="true">
+    <div class="sidebar-content">
+        <h5 class="px-3 mb-3 border-bottom pb-2">Categories</h5>
+        <div class="list-group list-group-flush">
+            <a href="{% url 'product_list' %}" class="list-group-item list-group-item-action {% if not selected_category %}active{% endif %}">
+                All
+            </a>
+            {% for category in categories %}
+                <a href="{% url 'product_list_by_category' category.slug %}" 
+                   class="list-group-item list-group-item-action {% if selected_category.slug == category.slug %}active{% endif %}">
+                    {{ category.name }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>

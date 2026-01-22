@@ -1,0 +1,34 @@
+{% load store_filters %}
+<div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4" id="product-grid">
+    {% for product in products %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0">
+            {% if product.display_image %}
+                <img src="{{ product.display_image.image.url }}" class="card-img-top bg-light" alt="{{ product.name }}" style="height: 350px; object-fit: contain;">
+            {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="height: 350px;">
+                    No Image
+                </div>
+            {% endif %}
+
+            <div class="card-body p-2 text-center">
+                <h6 class="card-title mb-1 text-truncate">{{ product.name }}</h6>
+                <p class="card-text fw-bold">{{ product.price }} USD</p>
+            </div>
+            
+            <div class="card-footer bg-white border-top-0 p-2">
+                {% if product.display_variant %}
+                    {% url 'product_detail' product.slug as base_url %}
+                    <a href="{{ base_url|url_params:product.display_variant_params }}" class="btn btn-outline-dark btn-sm w-100">View Details</a>
+                {% else %}
+                    <a href="{% url 'product_detail' product.slug %}" class="btn btn-outline-dark btn-sm w-100">View Details</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12 text-center">
+        <p>No products match your filters.</p>
+    </div>
+    {% endfor %}
+</div>

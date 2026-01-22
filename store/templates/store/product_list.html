@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block sidebar %}
+    {% include 'store/partials/filter_sidebar.html' %}
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center my-4">
+    {% include 'store/partials/page_header.html' %}
+
+    <form method="get" class="d-flex flex-grow-1 mx-4 align-items-start" id="searchForm"
+          hx-get="{{ request.path }}" 
+          hx-target="#product-grid" 
+          hx-swap="outerHTML" 
+          hx-push-url="true"
+          hx-include="#filter-sidebar form"
+          hx-indicator="#search-btn">
+        {% include 'store/partials/search_input_area.html' %}
+    </form>
+</div>
+
+{% include 'store/partials/smart_suggestion_alert.html' %}
+
+<!-- Initialize Tooltips & Logic -->
+<script>
+    function initializeTooltips() {
+        // Destroy existing tooltips to prevent duplicates
+        var existingTooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        existingTooltips.forEach(function (tooltipEl) {
+            var bsTooltip = bootstrap.Tooltip.getInstance(tooltipEl);
+            if (bsTooltip) {
+                bsTooltip.dispose();
+            }
+        });
+
+        // Initialize new tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function(){
+        initializeTooltips(); // Initialize on first load
+
+        // Conflict Modal
+        {% if conflict_data %}
+            var myModal = new bootstrap.Modal(document.getElementById('conflictModal'));
+            myModal.show();
+        {% endif %}
+    });
+
+    // Initialize tooltips after every HTMX swap
+    document.body.addEventListener('htmx:afterSwap', function(event) {
+        initializeTooltips();
+    });
+
+    function removeQuery(btn) {
+        // Remove the input group
+        btn.closest('.input-group').remove();
+        // Submit the form to refresh results
+        document.getElementById('searchForm').submit();
+    }
+
+    function addSuggestionAsNewQuery(suggestedQuery) {
+        var searchForm = document.getElementById('searchForm');
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'q';
+        input.value = suggestedQuery;
+        searchForm.appendChild(input);
+
+        // Add hidden input to indicate suggestion was accepted
+        var acceptedInput = document.createElement('input');
+        acceptedInput.type = 'hidden';
+        acceptedInput.name = 'accepted_suggestion';
+        acceptedInput.value = 'true';
+        searchForm.appendChild(acceptedInput);
+        
+        // Remove the suggestion box (client-side)
+        var suggestionAlert = document.getElementById('smart-suggestion-alert');
+        if (suggestionAlert) {
+            suggestionAlert.remove(); 
+        }
+
+        searchForm.submit();
+    }
+</script>
+
+{% include 'store/partials/conflict_modal.html' %}
+
+<div class="row">
+    <!-- Product Grid -->
+    <div class="col-12" id="grid-container">
+        {% include 'store/partials/product_grid.html' %}
+    </div>
+</div>
+
+{% endblock %}

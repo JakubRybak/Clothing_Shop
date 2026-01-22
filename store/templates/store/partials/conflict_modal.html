@@ -1,0 +1,39 @@
+<!-- Conflict Modal -->
+<div id="conflict-modal-container" hx-swap-oob="true">
+    <div class="modal fade" id="conflictModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-warning-subtle">
+            <h5 class="modal-title">Category Switch Detected</h5>
+          </div>
+          <div class="modal-body">
+            <p>Your search for <strong>"{{ conflict_data.trigger }}"</strong> implies switching to the <strong>{{ conflict_data.to }}</strong> category.</p>
+            <p>Current category: <strong>{{ conflict_data.from }}</strong></p>
+            <p class="text-danger small">Switching will clear your previous filters.</p>
+          </div>
+          <div class="modal-footer">
+            <!-- Cancel: Just reload page without the last query (the conflict trigger) -->
+            <a href="?{% for q in search_queries %}{% if not forloop.last %}q={{ q }}&{% endif %}{% endfor %}" class="btn btn-secondary">
+                Stay in {{ conflict_data.from }}
+            </a>
+            <!-- Switch: Start fresh with ONLY the new query -->
+            <a href="{% url 'product_list' %}?q={{ conflict_data.trigger }}" class="btn btn-primary">
+                Switch to {{ conflict_data.to }}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% if conflict_data %}
+    <script>
+        // Auto-show modal if conflict exists
+        (function() {
+            var el = document.getElementById('conflictModal');
+            if(el) {
+                var myModal = new bootstrap.Modal(el);
+                myModal.show();
+            }
+        })();
+    </script>
+    {% endif %}
+</div>

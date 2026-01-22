@@ -1,0 +1,138 @@
+{
+  "Coats": {
+    "attributes": [
+      {
+        "key": "style_category",
+        "type": "select",
+        "options": [
+          "trench_coat",
+          "puffer",
+          "wool_coat",
+          "parka",
+          "bomber",
+          "blazer",
+          "raincoat",
+          "other"
+        ],
+        "question": "What is the primary style category of this item?"
+      },
+      {
+        "key": "has_buttons",
+        "type": "boolean",
+        "question": "Are buttons clearly visible as a functional closure method?"
+      },
+      {
+        "key": "has_zipper",
+        "type": "boolean",
+        "question": "Is a zipper clearly visible as a functional closure method?"
+      },
+      {
+        "key": "has_belt",
+        "type": "boolean",
+        "question": "Does the coat have a belt or belt sash?"
+      },
+      {
+        "key": "has_hood",
+        "type": "boolean",
+        "question": "Does the coat have a hood?"
+      },
+      {
+        "key": "is_double_breasted",
+        "type": "boolean",
+        "question": "Is the coat double-breasted (two columns of buttons)?"
+      },
+      {
+        "key": "is_quilted",
+        "type": "boolean",
+        "question": "Is the material quilted (puffer style stitching)?"
+      },
+      {
+        "key": "length_type",
+        "type": "select",
+        "options": [
+          "cropped",
+          "waist",
+          "hip",
+          "knee",
+          "long",
+          "unknown"
+        ],
+        "question": "What is the length of the coat?"
+      },
+      {
+        "key": "color_pattern",
+        "type": "select",
+        "options": [
+          "solid",
+          "plaid",
+          "camo",
+          "colorblock",
+          "printed",
+          "other"
+        ],
+        "question": "What is the dominant pattern?"
+      }
+    ]
+  },
+  "Pants": {
+    "attributes": [
+      {
+        "key": "type_category",
+        "type": "select",
+        "options": [
+          "jeans",
+          "chinos",
+          "sweatpants",
+          "suit_trousers",
+          "cargo",
+          "leggings",
+          "shorts",
+          "other"
+        ],
+        "question": "What is the primary type of these pants?"
+      },
+      {
+        "key": "fit_type",
+        "type": "select",
+        "options": [
+          "skinny",
+          "slim",
+          "straight",
+          "loose_wide",
+          "unknown"
+        ],
+        "question": "How would you describe the fit?"
+      },
+      {
+        "key": "is_high_waist",
+        "type": "boolean",
+        "question": "Do the pants appear to be high-waisted?"
+      },
+      {
+        "key": "has_pleats",
+        "type": "boolean",
+        "question": "Are there pleats at the waist?"
+      },
+      {
+        "key": "has_cuffs",
+        "type": "boolean",
+        "question": "Are the bottom hems cuffed (folded up)?"
+      },
+      {
+        "key": "has_cargo_pockets",
+        "type": "boolean",
+        "question": "Are there large cargo pockets on the legs?"
+      },
+      {
+        "key": "is_distressed",
+        "type": "boolean",
+        "question": "Is the fabric ripped, torn, or distressed?"
+      },
+      {
+        "key": "has_belt_loops",
+        "type": "boolean",
+        "question": "Are belt loops visible?"
+      }
+    ]
+  }
+}

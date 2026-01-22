@@ -1,0 +1,15 @@
+<!-- Smart Suggestion -->
+{% if ai_search_summary.suggestion %}
+<div id="smart-suggestion-alert" hx-swap-oob="true" class="alert alert-info py-2 px-3 mx-4 mt-0 d-inline-flex align-items-center shadow-sm border-info-subtle">
+    <span class="me-2">
+        <strong>Suggestion:</strong> {{ ai_search_summary.suggestion.text }}
+    </span>
+    <button type="button" 
+            class="btn btn-sm btn-primary rounded-pill px-3 ms-auto" 
+            onclick="addSuggestionAsNewQuery('{{ ai_search_summary.suggestion.suggested_query }}')">
+        Add "{{ ai_search_summary.suggestion.suggested_query }}" as New Query
+    </button>
+</div>
+{% else %}
+<div id="smart-suggestion-alert" hx-swap-oob="true"></div>
+{% endif %}
