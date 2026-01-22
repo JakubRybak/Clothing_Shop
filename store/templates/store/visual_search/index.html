@@ -23,8 +23,10 @@
     .resize-handle.bottom-right { bottom: -5px; right: -5px; cursor: nwse-resize; }
 </style>
 <div class="container py-5" style="max-width: 800px;">
-    <h1 class="text-center mb-4">Visual AI Stylist</h1>
-    <p class="text-center text-muted mb-5">Upload a photo and let our AI find matching items from our store.</p>
+    <div id="visual-search-header">
+        <h1 class="text-center mb-4">Visual AI Stylist</h1>
+        <p class="text-center text-muted mb-5">Upload a photo and let our AI find matching items from our store.</p>
+    </div>
 
     <!-- Step 1: Upload -->
     <div id="step-upload" class="card shadow-sm border-0">
@@ -49,10 +51,10 @@
 
     <!-- Step 2: Person Selection (Hidden) -->
     <div id="step-person" class="card shadow-sm border-0 d-none">
-        <div class="card-body p-4">
+        <div class="card-body p-4 text-center">
             <h4 class="mb-3">Who should we style?</h4>
-            <p class="text-muted">We found multiple people. Click on the person you want to match.</p>
-            <div id="image-container" class="position-relative d-inline-block">
+            <p class="text-muted">Click on the person you want to match.</p>
+            <div id="image-container" class="position-relative d-inline-block shadow-sm rounded overflow-hidden bg-light" style="max-height: 70vh;">
                 <!-- Image and Boxes will be rendered here -->
             </div>
         </div>
@@ -98,9 +100,11 @@
         const uploadStep = document.getElementById('step-upload');
         const personStep = document.getElementById('step-person');
         const imageContainer = document.getElementById('image-container');
+        const header = document.getElementById('visual-search-header');
         
         loadingOverlay.classList.remove('d-none');
         uploadStep.classList.add('d-none');
+        header.classList.add('d-none');
         
         fetch("{% url 'visual_search' %}", {
             method: 'POST',
@@ -117,6 +121,9 @@
                 const img = document.createElement('img');
                 img.src = imgUrl;
                 img.style.maxWidth = '100%';
+                img.style.maxHeight = '70vh';
+                img.style.display = 'block';
+                img.style.objectFit = 'contain';
                 img.style.borderRadius = '8px';
                 img.id = 'target-image'; 
                 

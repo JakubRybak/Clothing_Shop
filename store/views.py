@@ -573,14 +573,25 @@ def product_detail(request, slug):
     selected_brightness_param = request.GET.get('brightness') # For context/display
     selected_size_param = request.GET.get('size') # For context/display
 
-    # Attempt to find variant based on URL color parameter (color only for selection)
+    # Attempt to find variant based on URL parameters
     initial_selected_variant = None
-    if selected_color_param:
-        initial_selected_variant = all_in_stock_variants.filter(color__iexact=selected_color_param).first()
+    
+    if selected_color_param and selected_size_param:
+        # Try to match both color and size
+        initial_selected_variant = all_in_stock_variants.filter(
+            color__iexact=selected_color_param,
+            size__iexact=selected_size_param
+        ).first()
+    
+    if not initial_selected_variant and selected_color_param:
+        # Fallback: match just the color and pick the first size
+        initial_selected_variant = all_in_stock_variants.filter(
+            color__iexact=selected_color_param
+        ).first()
 
-    # If no variant found with the URL color, or no color param provided, take the first available
+    # If no variant found or no params provided, take the first available
     if not initial_selected_variant:
-        initial_selected_variant = all_in_stock_variants.first() # Guaranteed to exist here as .exists() check passed
+        initial_selected_variant = all_in_stock_variants.first()
 
     # Now, use the attributes of the found initial_selected_variant for the context
     selected_color = initial_selected_variant.color
