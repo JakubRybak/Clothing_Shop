@@ -1,8 +1,0 @@
-Please perform the search for 'coat with belt' again and then open your browser's developer console (usually by pressing F12, and then navigating to the "Console" tab).
-Look for the output of the `console.log` statements I've added.
-Specifically, I'm interested in:
-1.  Is "initializeTooltips called." appearing?
-2.  What is the value of "Existing tooltips found:" and "New tooltips to initialize:"?
-3.  Are there any JavaScript errors in the console?
-
-This information will help me understand why the tooltips are not appearing.

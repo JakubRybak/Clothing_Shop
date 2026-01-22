@@ -23,13 +23,13 @@ class ProductAdmin(nested_admin.NestedModelAdmin):
     # ProductImageInline is removed from here because it's no longer a direct child of Product
     inlines = [ProductVariantInline]
     
-    list_display = ('name', 'price', 'created_at')
-    search_fields = ('name', 'description')
+    list_display = ('name', 'sku', 'price', 'created_at')
+    search_fields = ('name', 'sku', 'description')
     list_filter = ('variants__color', 'variants__brightness', 'variants__size') # Added filters for variant attributes
     prepopulated_fields = {'slug': ('name',)}
     fieldsets = (
         ('Basic Information', {
-            'fields': ('name', 'slug', 'categories', 'description', 'price')
+            'fields': ('name', 'sku', 'slug', 'categories', 'description', 'price')
         }),
         ('AI Generated Content', {
             'fields': ('ai_description', 'ai_tags', 'features'),

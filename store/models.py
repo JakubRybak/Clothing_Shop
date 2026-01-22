@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils.text import slugify
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
@@ -15,7 +16,8 @@ class Product(models.Model):
     # Many-to-Many: A product can belong to multiple categories (e.g., "Men", "Sale")
     categories = models.ManyToManyField(Category, related_name='products')
     name = models.CharField(max_length=200)
-    slug = models.SlugField(unique=True)
+    sku = models.CharField(max_length=100, blank=True, null=True)
+    slug = models.SlugField(unique=True, blank=True)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     
@@ -32,6 +34,14 @@ class Product(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            if self.sku:
+                self.slug = slugify(f"{self.name}-{self.sku}")
+            else:
+                self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.name
@@ -51,8 +61,6 @@ class ProductVariant(models.Model):
     brightness = models.CharField(max_length=10, choices=BRIGHTNESS_CHOICES, blank=True, null=True)
     stock_quantity = models.PositiveIntegerField(default=0)
     
-    sku = models.CharField(max_length=100, unique=True, blank=True, null=True)
-
     class Meta:
         unique_together = ('product', 'size', 'color', 'brightness')
         verbose_name_plural = "Product Variants"
