@@ -81,12 +81,18 @@ class Command(BaseCommand):
                     downloaded = []
                     for i, img_url in enumerate(image_urls[:5]):
                         try:
-                            resp = requests.get(img_url, timeout=5)
+                            self.stdout.write(f"Downloading {img_url}...")
+                            resp = requests.get(img_url, timeout=10)
                             if resp.status_code == 200:
                                 ext = img_url.split('.')[-1].split('?')[0] or 'jpg'
                                 filename = f"{sku}_{slugify(color)}_{i}.{ext}"
                                 downloaded.append({'name': filename, 'content': resp.content, 'main': (i==0)})
-                        except: continue
+                                self.stdout.write(f"Success: {filename}")
+                            else:
+                                self.stdout.write(self.style.ERROR(f"Failed to download {img_url}: Status {resp.status_code}"))
+                        except Exception as e:
+                            self.stdout.write(self.style.ERROR(f"Exception downloading {img_url}: {e}"))
+                            continue
                     image_cache[cache_key] = downloaded
 
                 for size in selected_sizes:
