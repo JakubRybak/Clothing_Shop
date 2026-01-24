@@ -153,7 +153,9 @@ if USE_GCS:
     DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
     STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
     
-    GS_DEFAULT_ACL = 'publicRead'
+    # Uniform Bucket Level Access requires these to be None/False
+    GS_DEFAULT_ACL = None
+    GS_QUERYSTRING_AUTH = False
 
 # Caching for AI Results (using Redis)
 REDIS_URL = os.getenv("REDIS_URL", "redis://127.0.0.1:6379/1")
