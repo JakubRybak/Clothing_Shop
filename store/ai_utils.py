@@ -94,13 +94,13 @@ def generate_product_features(product_id):
         
         import time
         response = None
-        for attempt in range(3):
+        for attempt in range(10):
             try:
                 response = model.generate_content([prompt_text] + image_parts, generation_config={"response_mime_type": "application/json"})
                 break # Success, exit retry loop
             except Exception as e:
                 if "429" in str(e):
-                     wait_time = 5 * (attempt + 1)
+                     wait_time = 10 * (attempt + 1)
                      print(f"Error generating features (429): Retrying in {wait_time}s... ({e})")
                      time.sleep(wait_time)
                      continue

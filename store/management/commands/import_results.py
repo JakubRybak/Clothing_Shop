@@ -22,9 +22,9 @@ class Command(BaseCommand):
         use_ai = options['ai']
         max_workers = options['workers']
 
-        # 1. Clear existing data
-        self.stdout.write(self.style.WARNING(f"Dropping existing products..."))
-        Product.objects.all().delete()
+        # 1. Clear existing data (DISABLED - use clear_products command instead)
+        # self.stdout.write(self.style.WARNING(f"Dropping existing products..."))
+        # Product.objects.all().delete()
         
         # 2. Setup Category
         category_name = "Coats"
@@ -106,7 +106,7 @@ class Command(BaseCommand):
                         # If we just saved the main image, it triggered an AI call via signal.
                         # Pause for 2 seconds to stay within API rate limits and avoid 429 errors.
                         if img_data['main']:
-                            time.sleep(2)
+                            time.sleep(3)
 
                 self.stdout.write(f"Imported: {name} ({color})")
 
