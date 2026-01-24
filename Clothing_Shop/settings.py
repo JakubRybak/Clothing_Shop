@@ -128,15 +128,31 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'  # Added for safety
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 # Google Cloud Storage Configuration
-USE_GCS = os.getenv("USE_GCS", "False") == "True"
+# Handle 'True', 'true', '1', etc.
+USE_GCS = os.getenv("USE_GCS", "False").lower() in ("true", "1", "yes")
+
 if USE_GCS:
     GS_BUCKET_NAME = os.getenv("GS_BUCKET_NAME")
+    GS_PROJECT_ID = os.getenv("GCP_PROJECT_ID") # Explicitly set project ID
+    
+    # Use GCS for static and media
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        },
+        "staticfiles": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        },
+    }
+    # For older Django versions or libraries relying on these:
     DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
     STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    
     GS_DEFAULT_ACL = 'publicRead'
 
 # Caching for AI Results (using Redis)
