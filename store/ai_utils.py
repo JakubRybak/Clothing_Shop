@@ -266,7 +266,16 @@ def process_search_query(user_query, current_category_name=None):
         prompt += "8. IMPORTANT: If a feature is NOT mentioned, DO NOT include it in the output. Do NOT return 'unknown'.\n"
         
         model = GenerativeModel("gemini-2.0-flash-lite-001")
-        response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+        
+        response = None
+        for attempt in range(3):
+            try:
+                response = model.generate_content(prompt, generation_config={"response_mime_type": "application/json"})
+                break
+            except Exception as e:
+                if attempt == 2: raise e # Let the outer try/catch handle the final failure
+                print(f"Gemini API error (attempt {attempt+1}/3): {e}. Retrying in 1s...")
+                time.sleep(1)
         
         text = response.text.strip()
         if text.startswith("```json"): text = text[7:]
