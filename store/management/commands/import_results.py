@@ -1,6 +1,7 @@
 import json
 import requests
 import random
+import time
 import concurrent.futures
 from django.core.management.base import BaseCommand
 from django.core.files.base import ContentFile

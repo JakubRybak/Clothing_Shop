@@ -115,6 +115,14 @@ def generate_product_features(product_id):
         
         raw_features = json.loads(text)
         
+        # Guard against AI returning a list instead of a dict
+        if isinstance(raw_features, list):
+            # If it's a list, try to grab the first item if it's a dict, otherwise empty
+            if raw_features and isinstance(raw_features[0], dict):
+                raw_features = raw_features[0]
+            else:
+                raw_features = {}
+        
         # Normalize string values in features to lowercase for consistent filtering
         normalized_features = {}
         for k, v in raw_features.items():
