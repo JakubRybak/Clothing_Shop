@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import vertexai
 from vertexai.generative_models import GenerativeModel, Part
 from google.oauth2 import service_account
