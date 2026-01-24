@@ -75,8 +75,9 @@ def generate_product_features(product_id):
 
         image_parts = []
         for img_obj in images_to_send:
-            mime_type = "image/png" if img_obj.image.path.lower().endswith('.png') else "image/jpeg"
-            with open(img_obj.image.path, "rb") as f:
+            mime_type = "image/png" if img_obj.image.name.lower().endswith('.png') else "image/jpeg"
+            # Use Django's file storage abstraction to work with both local and GCS
+            with img_obj.image.open("rb") as f:
                 image_parts.append(Part.from_data(data=f.read(), mime_type=mime_type))
         
         prompt_text = f"Analyze product: '{product.name}' (Category: {schema_name}).\n"
@@ -450,12 +451,12 @@ def api_detect_brightness(product_image):
     Analyzes a ProductImage to classify its brightness ('light', 'medium', 'dark').
     """
     try:
-        # Ensure image file is at the beginning
-        with open(product_image.image.path, "rb") as f:
+        # Use Django's file storage abstraction
+        with product_image.image.open("rb") as f:
             image_data = f.read()
 
         mime_type = "image/png"
-        if product_image.image.path.lower().endswith(('.jpg', '.jpeg')):
+        if product_image.image.name.lower().endswith(('.jpg', '.jpeg')):
             mime_type = "image/jpeg"
         
         image_part = Part.from_data(data=image_data, mime_type=mime_type)

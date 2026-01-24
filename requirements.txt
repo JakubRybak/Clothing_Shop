@@ -5,9 +5,14 @@ django-redis
 django-storages
 google-cloud-storage
 google-cloud-aiplatform>=1.38.0
+Pillow>=10.0.0
 google-cloud-vertexai
 google-auth
 psycopg2-binary
 requests
 gunicorn
 python-dotenv
+# Ensure GCS and AI work together
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
