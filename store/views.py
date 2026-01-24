@@ -185,8 +185,9 @@ def product_list(request, category_slug=None):
             available_features = target_schema.get('attributes', [])
 
     # Calculate all available brightness values for display in the filter panel
+    raw_brightness_values = ProductVariant.objects.filter(product__in=products).values_list('brightness', flat=True)
     all_available_brightness_values = sorted(list(set(
-        ProductVariant.objects.filter(product__in=products).values_list('brightness', flat=True)
+        [b for b in raw_brightness_values if b]
     )))
     # Filter out None and empty strings, and lowercase for consistency
     all_available_brightness_values = [
@@ -336,8 +337,9 @@ def product_list(request, category_slug=None):
     if category: products = products.filter(categories=category)
 
     # Calculate all available brightness values for display in the filter panel
+    raw_brightness_values = ProductVariant.objects.filter(product__in=products).values_list('brightness', flat=True)
     all_available_brightness_values = sorted(list(set(
-        ProductVariant.objects.filter(product__in=products).values_list('brightness', flat=True)
+        [b for b in raw_brightness_values if b]
     )))
     # Filter out None and empty strings, and lowercase for consistency
     all_available_brightness_values = [
