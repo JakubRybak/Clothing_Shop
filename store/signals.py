@@ -15,7 +15,9 @@ def product_image_post_save(sender, instance, created, **kwargs):
     # Check if brightness is already set for this variant
     # This prevents re-detection if it's already there, unless forced
     # User scenario suggests brightness is not set on first image save.
-    if not variant.brightness:
+    # OPTIMIZATION: Only trigger AI if this is the MAIN image.
+    # This prevents 5 parallel API calls when uploading 5 images for one product.
+    if instance.is_main and not variant.brightness:
         success, message = generate_brightness_for_variant(variant.id)
         if not success:
             # You might want to log this message to Django's logging system
