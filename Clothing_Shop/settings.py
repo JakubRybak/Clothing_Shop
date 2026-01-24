@@ -175,6 +175,16 @@ HTMX_URL_FILTER = 'Clothing_Shop.htmx_filters.is_htmx_request_allowed'
 
 
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/6.0/ref/settings/#default-auto-field
+
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# CSRF Trusted Origins (Required for Cloud Run / HTTPS behind proxy)
+CSRF_TRUSTED_ORIGINS = [
+    "https://tailor-shop-682769211091.us-east1.run.app",
+]
+
 # Authentication redirects
 
 LOGIN_REDIRECT_URL = 'product_list'

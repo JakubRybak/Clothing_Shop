@@ -479,7 +479,7 @@ def api_detect_brightness(product_image):
     With retry logic for 429 errors.
     """
     import time
-    for attempt in range(3): # Retry up to 3 times
+    for attempt in range(10): # Retry up to 3 times
         try:
             # Use Django's file storage abstraction
             with product_image.image.open("rb") as f:
@@ -509,7 +509,7 @@ def api_detect_brightness(product_image):
             
         except Exception as e:
             if "429" in str(e):
-                wait_time = 5 * (attempt + 1) # 5s, 10s, 15s
+                wait_time = 10 * (attempt + 1) # 5s, 10s, 15s
                 print(f"Error detecting brightness (429): Retrying in {wait_time}s... ({e})")
                 time.sleep(wait_time)
                 continue
