@@ -103,9 +103,9 @@ class Command(BaseCommand):
                         pi = ProductImage(variant=variant, is_main=img_data['main'])
                         pi.image.save(img_data['name'], ContentFile(img_data['content']), save=True)
                         # If we just saved the main image, it triggered an AI call via signal.
-                        # Pause for 1 second to stay within API rate limits.
+                        # Pause for 2 seconds to stay within API rate limits and avoid 429 errors.
                         if img_data['main']:
-                            time.sleep(1)
+                            time.sleep(2)
 
                 self.stdout.write(f"Imported: {name} ({color})")
 

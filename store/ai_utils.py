@@ -90,8 +90,26 @@ def generate_product_features(product_id):
         prompt_text += f"Return JSON strictly matching schema:\n{json.dumps(prompt_structure)}"
 
         model = GenerativeModel("gemini-2.0-flash-lite-001")
-        response = model.generate_content([prompt_text] + image_parts, generation_config={"response_mime_type": "application/json"})
         
+        import time
+        response = None
+        for attempt in range(3):
+            try:
+                response = model.generate_content([prompt_text] + image_parts, generation_config={"response_mime_type": "application/json"})
+                break # Success, exit retry loop
+            except Exception as e:
+                if "429" in str(e):
+                     wait_time = 5 * (attempt + 1)
+                     print(f"Error generating features (429): Retrying in {wait_time}s... ({e})")
+                     time.sleep(wait_time)
+                     continue
+                else:
+                    raise e # Re-raise non-429 errors to be caught by outer try/except
+
+        if not response:
+            print(f"Failed to generate features for {product.name} after retries.")
+            return
+
         text = response.text.strip().replace("```json", "").replace("```", "")
         
         raw_features = json.loads(text)
@@ -449,33 +467,44 @@ def api_identify_items(image_file, box=None, user_context=None):
 def api_detect_brightness(product_image):
     """
     Analyzes a ProductImage to classify its brightness ('light', 'medium', 'dark').
+    With retry logic for 429 errors.
     """
-    try:
-        # Use Django's file storage abstraction
-        with product_image.image.open("rb") as f:
-            image_data = f.read()
+    import time
+    for attempt in range(3): # Retry up to 3 times
+        try:
+            # Use Django's file storage abstraction
+            with product_image.image.open("rb") as f:
+                image_data = f.read()
 
-        mime_type = "image/png"
-        if product_image.image.name.lower().endswith(('.jpg', '.jpeg')):
-            mime_type = "image/jpeg"
-        
-        image_part = Part.from_data(data=image_data, mime_type=mime_type)
-        
-        prompt = """
-        Given this product image, classify the overall brightness of the main product's color as one of 'light', 'medium', or 'dark'.
-        Return a single JSON object with one key 'brightness' and its corresponding value.
-        Example: {"brightness": "dark"}
-        """
-        
-        model = GenerativeModel("gemini-2.0-flash-lite-001")
-        response = model.generate_content([prompt, image_part], generation_config={"response_mime_type": "application/json"})
-        
-        text = response.text.strip()
-        if text.startswith("```json"): text = text[7:]
-        if text.endswith("```"): text = text[:-3]
-        
-        brightness_data = json.loads(text)
-        return brightness_data.get("brightness")
-    except Exception as e:
-        print(f"Error detecting brightness for image {product_image.id}: {e}")
-        return None
+            mime_type = "image/png"
+            if product_image.image.name.lower().endswith(('.jpg', '.jpeg')):
+                mime_type = "image/jpeg"
+            
+            image_part = Part.from_data(data=image_data, mime_type=mime_type)
+            
+            prompt = """
+            Given this product image, classify the overall brightness of the main product's color as one of 'light', 'medium', or 'dark'.
+            Return a single JSON object with one key 'brightness' and its corresponding value.
+            Example: {"brightness": "dark"}
+            """
+            
+            model = GenerativeModel("gemini-2.0-flash-lite-001")
+            response = model.generate_content([prompt, image_part], generation_config={"response_mime_type": "application/json"})
+            
+            text = response.text.strip()
+            if text.startswith("```json"): text = text[7:]
+            if text.endswith("```"): text = text[:-3]
+            
+            brightness_data = json.loads(text)
+            return brightness_data.get("brightness")
+            
+        except Exception as e:
+            if "429" in str(e):
+                wait_time = 5 * (attempt + 1) # 5s, 10s, 15s
+                print(f"Error detecting brightness (429): Retrying in {wait_time}s... ({e})")
+                time.sleep(wait_time)
+                continue
+            else:
+                print(f"Error detecting brightness for image {product_image.id}: {e}")
+                return None
+    return None
