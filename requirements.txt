@@ -4,6 +4,7 @@ django-nested-admin
 django-redis
 django-storages
 google-cloud-storage
+google-cloud-aiplatform>=1.38.0
 google-cloud-vertexai
 google-auth
 psycopg2-binary
