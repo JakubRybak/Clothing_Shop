@@ -1,0 +1,19 @@
+# Security
+gcp_key.json
+.env
+secret.key
+
+# Local Environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Local Data
+db.sqlite3
+media/
+static_root/
+
+# IDE/Editor
+.idea/
+.vscode/

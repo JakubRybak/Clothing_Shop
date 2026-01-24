@@ -7,14 +7,18 @@ from django.conf import settings
 from django.core.cache import cache
 from .models import Product, ProductImage, ProductVariant
 
-# Load credentials from the JSON key file
-CREDENTIALS_PATH = os.path.join(settings.BASE_DIR, 'gcp_key.json')
-credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH)
+# Load credentials and project settings
+PROJECT_ID = os.getenv("GCP_PROJECT_ID", "advanced-searching-pdf")
+LOCATION = os.getenv("GCP_LOCATION", "us-central1")
 
-# Initialize Vertex AI
-PROJECT_ID = "advanced-searching-pdf"
-LOCATION = "us-central1"
-vertexai.init(project=PROJECT_ID, location=LOCATION, credentials=credentials)
+# If on local machine with a key file, use it. Otherwise, use default (Cloud Run)
+CREDENTIALS_PATH = os.path.join(settings.BASE_DIR, 'gcp_key.json')
+if os.path.exists(CREDENTIALS_PATH):
+    credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH)
+    vertexai.init(project=PROJECT_ID, location=LOCATION, credentials=credentials)
+else:
+    # On Cloud Run, it uses the service's own identity automatically
+    vertexai.init(project=PROJECT_ID, location=LOCATION)
 
 def load_category_schemas():
     """Loads category schemas from a JSON file."""

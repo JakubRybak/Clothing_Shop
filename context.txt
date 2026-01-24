@@ -1,0 +1,50 @@
+==========================================================
+PROJECT CONTEXT: AI-POWERED CLOTHING SHOP (tAilor)
+==========================================================
+
+This file provides a snapshot of the project for future sessions or other LLMs.
+
+----------------------------------------------------------
+1. CORE STACK & ARCHITECTURE
+----------------------------------------------------------
+- Backend: Django (Python 3.11).
+- Database: PostgreSQL (using pgvector for future vector features).
+- Caching: Redis (configured for AI result persistence and speed).
+- UI: HTMX (dynamic updates) + Bootstrap 5 (styling).
+- AI Engine: Google Vertex AI (Gemini 2.0 Flash Lite).
+
+----------------------------------------------------------
+2. KEY FEATURES
+----------------------------------------------------------
+- Smart Search: Natural language parsing that extracts colors, features (buttons, hoods, belts), and brightness levels without fixed keywords.
+- Hybrid Caching: Search results are cached in Redis (fast) and stored permanently in PostgreSQL (Knowledge Base/Analytics).
+- Visual Search: Users upload photos -> AI detects people -> AI identifies clothing items -> System finds similar matches in the shop.
+- Automated Import: A management command (`import_results.py`) handles bulk JSON imports from web scrapers, randomizes sizes/stock, and uses multithreading for batch AI feature generation.
+- Hierarchy: Product (Style/SKU) -> ProductVariant (Size/Color/Stock) -> ProductImage (linked to Variant).
+
+----------------------------------------------------------
+3. RECENT CHANGES & FIXES
+----------------------------------------------------------
+- Data Model: Moved SKU from Variant to Product; slugs are auto-generated as `name-sku`.
+- Auth: Added a fully integrated Login and Registration system using Django's built-in auth.
+- Detail View: Fixed a bug where size selection buttons didn't visually update (now respects color/size combo in URL).
+- Visual Search: Optimized UI to ensure uploaded images fit the screen (max 70vh) without scrolling.
+- Cloud Readiness: Added a Dockerfile, requirements.txt, and updated settings.py to use environment variables and support Google Cloud Storage (GCS).
+
+----------------------------------------------------------
+4. DATA SOURCE
+----------------------------------------------------------
+- Current Data: Scraped from 'Reserved' (Coats category).
+- Structure: JSON-based import mapping multiple color variations and sizes to single product styles.
+
+----------------------------------------------------------
+5. DEPLOYMENT GOAL
+----------------------------------------------------------
+- Target: Google Cloud Run (Serverless).
+- DB/Redis: To be hosted on a Compute Engine VM to save costs.
+- Files: Static and Media files will be hosted on Google Cloud Storage (GCS).
+- Reference: Detailed instructions are available in `plan.txt`.
+
+==========================================================
+THIS PROJECT IS READY FOR DEPLOYMENT SETUP.
+==========================================================

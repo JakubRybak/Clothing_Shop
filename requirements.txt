@@ -1,0 +1,12 @@
+django>=5.0
+django-htmx
+django-nested-admin
+django-redis
+django-storages
+google-cloud-storage
+google-cloud-vertexai
+google-auth
+psycopg2-binary
+requests
+gunicorn
+python-dotenv
