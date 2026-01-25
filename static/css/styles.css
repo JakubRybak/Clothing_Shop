@@ -92,7 +92,7 @@
 /* Wrapper to push content right */
 .content-wrapper {
     padding-left: 60px;
-    padding-right: 60px; 
+    padding-right: 60px;
 }
 
 /* Adjust main content when sidebar is out */
@@ -111,28 +111,6 @@
 
 .htmx-request .search-icon-text {
     display: none;
-}
-/* Logo Styling */
-.navbar-brand.logo-brand {
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    font-weight: 800; /* Extra bold */
-    font-size: 1.8rem;
-    letter-spacing: 3px; /* Wide spacing */
-    color: #fff !important;
-    text-transform: uppercase;
-    display: flex;
-    align-items: center;
-}
-
-.logo-ai {
-    background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); /* Bright Cyan to Blue */
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    font-weight: 900; /* Even bolder */
-    padding: 0 2px;
-    filter: drop-shadow(0 0 8px rgba(0, 114, 255, 0.6)); /* Glow effect */
-    font-size: 2rem; /* Slightly larger */
 }
 
 /* Animation for Cart Update */
@@ -172,4 +150,27 @@
 
 .btn-visual-search:active {
     transform: translateY(-1px);
+}
+
+/* Logo Styling */
+.navbar-brand.logo-brand {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 800; /* Extra bold */
+    font-size: 1.8rem;
+    letter-spacing: 3px; /* Wide spacing */
+    color: #fff !important;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+}
+
+.logo-ai {
+    background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); /* Bright Cyan to Blue */
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900; /* Even bolder */
+    padding: 0 2px;
+    filter: drop-shadow(0 0 8px rgba(0, 114, 255, 0.6)); /* Glow effect */
+    font-size: 2rem; /* Slightly larger */
 }

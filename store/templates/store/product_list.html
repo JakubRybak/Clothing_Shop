@@ -67,9 +67,24 @@
         var input = group.querySelector('input[name="q"]');
         if (input) input.remove();
 
-        // Use htmx to trigger the form submission
+        // FIX: Temporarily clear the main search input so its unsaved value is not included in the request
         var form = document.getElementById('searchForm');
+        var mainInput = form.querySelector('input[type="search"][name="q"]');
+        var originalValue = "";
+        if (mainInput) {
+            originalValue = mainInput.value;
+            mainInput.value = "";
+        }
+
+        // Use htmx to trigger the form submission
         htmx.trigger(form, 'submit');
+
+        // Restore the value so the user doesn't lose what they were typing
+        if (mainInput) {
+            setTimeout(function() {
+                mainInput.value = originalValue;
+            }, 50);
+        }
     }
 
     function addSuggestionAsNewQuery(suggestedQuery) {

@@ -351,7 +351,15 @@
 
                     if (item.features) {
                         for (const [key, values] of Object.entries(item.features)) {
-                            const valList = Array.isArray(values) ? values : [values];
+                            let valList = Array.isArray(values) ? values : [values];
+                            
+                            // Safety Check: If feature is boolean/binary, don't allow both Yes and No
+                            if (valList.length > 1 && valList.every(v => typeof v === 'boolean' || ['true', 'false'].includes(String(v).toLowerCase()))) {
+                                // Prefer the first one (usually most likely) or explicitly True if present
+                                const preferred = valList.find(v => v === true || String(v).toLowerCase() === 'true');
+                                valList = preferred !== undefined ? [preferred] : [valList[0]];
+                            }
+
                             valList.forEach((val, vIdx) => {
                                 featuresHtml += `
                                     <div class="form-check">
