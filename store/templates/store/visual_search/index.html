@@ -339,20 +339,26 @@
                     const itemId = `item-${index}`;
                     let featuresHtml = '';
                     
-                    if (item.color) {
+                    // Handle multiple colors
+                    const itemColors = item.colors || (item.color ? [item.color] : []);
+                    itemColors.forEach((color, cIdx) => {
                         featuresHtml += `
                             <div class="form-check">
-                                <input class="form-check-input filter-checkbox" type="checkbox" value="${item.color}" id="${itemId}-color" data-type="color" checked onchange="updateShopLink('${itemId}', '${item.category}')">
-                                <label class="form-check-label small" for="${itemId}-color">Color: ${item.color}</label>
+                                <input class="form-check-input filter-checkbox" type="checkbox" value="${color}" id="${itemId}-color-${cIdx}" data-type="color" checked onchange="updateShopLink('${itemId}', '${item.category}')">
+                                <label class="form-check-label small" for="${itemId}-color-${cIdx}">Color: ${color}</label>
                             </div>`;
-                    }
+                    });
+
                     if (item.features) {
-                        for (const [key, value] of Object.entries(item.features)) {
-                            featuresHtml += `
-                                <div class="form-check">
-                                    <input class="form-check-input filter-checkbox" type="checkbox" value="${value}" id="${itemId}-${key}" data-type="feature" data-key="${key}" checked onchange="updateShopLink('${itemId}', '${item.category}')">
-                                    <label class="form-check-label small" for="${itemId}-${key}">${key.replace(/_/g, ' ')}: ${value}</label>
-                                </div>`;
+                        for (const [key, values] of Object.entries(item.features)) {
+                            const valList = Array.isArray(values) ? values : [values];
+                            valList.forEach((val, vIdx) => {
+                                featuresHtml += `
+                                    <div class="form-check">
+                                        <input class="form-check-input filter-checkbox" type="checkbox" value="${val}" id="${itemId}-${key}-${vIdx}" data-type="feature" data-key="${key}" checked onchange="updateShopLink('${itemId}', '${item.category}')">
+                                        <label class="form-check-label small" for="${itemId}-${key}-${vIdx}">${key.replace(/_/g, ' ')}: ${val === true ? 'Yes' : (val === false ? 'No' : val)}</label>
+                                    </div>`;
+                            });
                         }
                     }
 
@@ -414,17 +420,21 @@
         
         itemElements.forEach(el => {
             const category = el.dataset.category; 
-            const checkedColor = el.querySelector('.filter-checkbox[data-type="color"]:checked');
+            const checkedColors = Array.from(el.querySelectorAll('.filter-checkbox[data-type="color"]:checked')).map(cb => cb.value);
             const checkedFeatures = el.querySelectorAll('.filter-checkbox[data-type="feature"]:checked');
             
             const itemData = {
                 category: category,
-                color: checkedColor ? checkedColor.value : null,
+                colors: checkedColors,
                 features: {}
             };
             
             checkedFeatures.forEach(cb => {
-                itemData.features[cb.dataset.key] = cb.value;
+                const key = cb.dataset.key;
+                if (!itemData.features[key]) {
+                    itemData.features[key] = [];
+                }
+                itemData.features[key].push(cb.value);
             });
             
             items.push(itemData);

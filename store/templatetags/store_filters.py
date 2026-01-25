@@ -45,3 +45,11 @@ def url_params(base_url, params_dict):
         separator = '&' if '?' in base_url else '?'
         return f"{base_url}{separator}{encoded_params}"
     return base_url
+
+@register.filter(name='format_label')
+def format_label(value):
+    if not value: return ""
+    # Clean up common keys: 'style_category' -> 'Style', 'has_buttons' -> 'Has buttons'
+    label = value.replace('_category', '').replace('has_', 'Has ').replace('is_', 'Is ')
+    label = label.replace('_', ' ').strip()
+    return f"{label[0].upper() + label[1:]}:"

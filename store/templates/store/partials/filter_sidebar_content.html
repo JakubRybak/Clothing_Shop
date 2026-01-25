@@ -89,7 +89,7 @@
         {% for attr in available_features %}
         <div class="mb-4">
             <label class="form-label fw-bold text-capitalize d-flex align-items-center" style="font-size: 0.9rem;">
-                {{ attr.question }}
+                {{ attr.key|format_label }}
                 {% if attribute_suggestions|get_item:attr.key %}
                     <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ attribute_suggestions|get_item:attr.key }}"></i>
                 {% endif %}

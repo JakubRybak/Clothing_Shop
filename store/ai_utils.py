@@ -248,13 +248,13 @@ def process_search_query(user_query, current_category_name=None):
         
         prompt += " Instructions:\n"
         prompt += "1. Identify features from the list (including 'brightness') that are EXPLICITLY mentioned or VERY STRONGLY implied by the query.\n"
-        prompt += "2. **CRITICAL COLOR DETECTION**: If a term is an exact match for a color in 'Available Colors', extract it ONLY as a color. DO NOT infer brightness or color_pattern from these exact color matches.\n"
+        prompt += "2. **STRICT COLOR DETECTION**: Extract colors ONLY if they are an EXACT match (case-insensitive) for a color in the 'Available Colors' list provided above. If the query mentions a color NOT in the list, DO NOT include it in the 'colors' array. DO NOT infer brightness or color_pattern from these exact color matches.\n"
         prompt += "3. Extract values for identified features. Use exact option names (e.g., 'dark' for 'brightness').\n"
         prompt += "4. **AVOID INFERENCE**: DO NOT infer 'brightness' or 'color_pattern' unless EXPLICITLY mentioned or very strongly implied, and only if no direct color match was found (e.g., 'dark coat' implies brightness:dark, but 'black coat' implies color:black, NOT brightness:dark or color_pattern:solid).\n"
         prompt += "5. EXCLUSIONS (Negative Logic): If the query explicitly uses NEGATIVE language (e.g., 'not', 'no', 'without', 'except'), extract those features into `negative_filters` and `negative_colors`.\n"
         prompt += "   - Example: 'not red' -> negative_colors: ['red'] (always lowercase)\n"
         prompt += "   - Example: 'no zipper' -> negative_filters: {'has_zipper': true}\n"
-        prompt += "6. SUGGESTIONS: If the query is VAGUE or implies a specific need without technical detail, suggest ONE attribute from the schema. \n"
+        prompt += "6. SUGGESTIONS: If the query is VAGUE or implies a specific need without technical detail, suggest ONE attribute from the schema. The 'text' field in the suggestion object will be displayed directly to the user, so ensure it is natural, polite, and helpful.\n"
         prompt += "7. Return JSON: \n"
         prompt += "   { \n"
         prompt += "     \"filters\": {\"feature_key\": [\"value\"]}, \n"
@@ -450,19 +450,24 @@ def api_identify_items(image_file, box=None, user_context=None):
         prompt += f"""
         Identify visible clothing items. Map them to one of these categories: {list(CATEGORY_SCHEMAS.keys())}.
         
-        CRITICAL: For the 'features' dictionary, you MUST use ONLY the allowed keys AND allowed option values listed below:
+        CRITICAL: For the 'features' dictionary, you MUST use ONLY the allowed keys listed below:
         {schema_guidance}
         
+        INSTRUCTIONS FOR BROAD SEARCH:
+        1. **Do not be overly restrictive.** If an item's style, length, or color is ambiguous or could fit multiple categories (e.g., it looks like both a 'wool_coat' and a 'blazer'), include ALL relevant options in the list.
+        2. **Multi-value support**: Return 'colors' as a list and each feature value in 'features' as a list of strings/booleans.
+        3. Aim to provide 1-3 likely options for ambiguous features.
+
         Return JSON:
         {{
             "items": [
                 {{
                     "name": "Display Name", 
                     "category": "ExactCategoryName", 
-                    "color": "Primary Color",
+                    "colors": ["Color A", "Color B"],
                     "features": {{
-                        "allowed_key_1": true,
-                        "allowed_key_2": "exact_option_value"
+                        "allowed_key_1": [true],
+                        "allowed_key_2": ["exact_option_value_1", "exact_option_value_2"]
                     }}
                 }}
             ]

@@ -12,6 +12,7 @@ import json
 from .models import Product, ProductVariant, Category
 from .cart import Cart
 from .ai_utils import load_category_schemas, process_search_query, api_detect_people, api_identify_items
+from .constants import COLOR_MAPPING, get_color_family
 
 
 def normalize_filter_value(value):
@@ -74,7 +75,17 @@ def _apply_all_query_filters(products_queryset, combined_colors, all_brightness_
     
     # Exclude products with variants matching negative colors
     if merged_negative_colors:
-        products_queryset = products_queryset.exclude(variants__color__in=list(merged_negative_colors)).distinct()
+        # Negative colors also need mapping if they are families
+        expanded_negative_colors = []
+        for neg_fam in merged_negative_colors:
+             # Find all specific colors that map to this family (or use it directly if it's a specific color)
+            specifics = [k for k, v in COLOR_MAPPING.items() if v.lower() == neg_fam.lower()]
+            if specifics:
+                expanded_negative_colors.extend(specifics)
+            else:
+                expanded_negative_colors.append(neg_fam)
+
+        products_queryset = products_queryset.exclude(variants__color__in=expanded_negative_colors).distinct()
 
     return products_queryset
 
@@ -430,25 +441,50 @@ def product_list(request, category_slug=None):
 
 
     all_colors_from_db = sorted(list(set(ProductVariant.objects.values_list('color', flat=True))))
-    all_colors = [c.capitalize() for c in all_colors_from_db] # Capitalize for display
+
+    # --- New Color Grouping Logic ---
+    # Convert specific DB colors to families for the sidebar list
+    available_color_families = sorted(list(set(get_color_family(c) for c in all_colors_from_db)))
+    all_colors = available_color_families # Rename variable for template compatibility
 
     manual_colors_raw = request.GET.getlist('colors')
-    manual_colors = [c.lower() for c in manual_colors_raw] # Normalize manual colors to lowercase
+    manual_colors = [c.lower() for c in manual_colors_raw]
 
-    # ai_colors should already be lowercased from ai_utils.py
-    combined_colors = list(set(manual_colors + ai_colors))
-    # ... (color normalization and negative color logic is the same) ...
+    # Map AI-detected specific colors to families for sidebar display/selection logic
+    ai_color_families = []
+    for c in ai_colors:
+        ai_color_families.append(get_color_family(c).lower())
+
+    # Combined families (User selected + AI selected families)
+    combined_color_families = list(set(manual_colors + ai_color_families))
+
+    # Expand families back to specific colors for the database query
+    expanded_specific_colors = []
+
+    if combined_color_families:
+        for family in combined_color_families:
+            # Find all specific colors in our mapping that belong to this family
+            specifics = [k for k, v in COLOR_MAPPING.items() if v.lower() == family.lower()]
+
+            # Also include the family name itself if it happens to be a specific color in the DB (e.g. "Green" variant)
+            specifics.append(family.lower())
+
+            expanded_specific_colors.extend(specifics)
+
+        # Remove duplicates
+        expanded_specific_colors = list(set(expanded_specific_colors))
 
     selected_sizes = request.GET.getlist('sizes')
 
     # --- REFACTORED Filtering on Variants ---
-    if combined_colors and all_brightness_values:
+    # Use expanded_specific_colors instead of combined_colors (which was families)
+    if expanded_specific_colors and all_brightness_values:
         products = products.annotate(lower_color=Lower('variants__color')).filter(
-            lower_color__in=combined_colors,
+            lower_color__in=expanded_specific_colors,
             variants__brightness__in=all_brightness_values
         ).distinct()
-    elif combined_colors:
-        products = products.annotate(lower_color=Lower('variants__color')).filter(lower_color__in=combined_colors).distinct()
+    elif expanded_specific_colors:
+        products = products.annotate(lower_color=Lower('variants__color')).filter(lower_color__in=expanded_specific_colors).distinct()      
     elif all_brightness_values:
         products = products.filter(variants__brightness__in=all_brightness_values).distinct()
 
@@ -521,14 +557,23 @@ def product_list(request, category_slug=None):
     
     # Exclude products with variants matching negative colors
     if merged_negative_colors:
-        products = products.exclude(variants__color__in=list(merged_negative_colors)).distinct()
+         # Negative colors also need mapping if they are families
+        expanded_negative_colors = []
+        for neg_fam in merged_negative_colors:
+             # Find all specific colors that map to this family (or use it directly if it's a specific color)
+            specifics = [k for k, v in COLOR_MAPPING.items() if v.lower() == neg_fam.lower()]
+            if specifics:
+                expanded_negative_colors.extend(specifics)
+            else:
+                expanded_negative_colors.append(neg_fam)
+        products = products.exclude(variants__color__in=expanded_negative_colors).distinct()
     
 
 
     # --- Image Logic ---
     # Convert to list *after* all filtering is done
     products_list = list(products)
-    products_list = _assign_display_images(products_list, combined_colors, all_brightness_values)
+    products_list = _assign_display_images(products_list, expanded_specific_colors, all_brightness_values)
 
     all_sizes = sorted(list(set(ProductVariant.objects.values_list('size', flat=True))))
 
@@ -536,12 +581,12 @@ def product_list(request, category_slug=None):
     context = {
         'products': products_list,
         'selected_category': category,
-        'all_colors': all_colors,
+        'all_colors': all_colors, # Now contains families
         'all_sizes': all_sizes,
         'all_available_brightness_values': all_available_brightness_values,
-        'selected_colors': combined_colors,
+        'selected_colors': combined_color_families, # Updated to use families
         'manual_selected_colors': manual_colors,
-        'ai_selected_colors': ai_colors,
+        'ai_selected_colors': ai_color_families, # Updated
         'selected_sizes': selected_sizes,
         'selected_brightness': all_brightness_values,
         'manual_selected_brightness': [str(b).lower() for b in manual_brightness_values],
@@ -672,15 +717,28 @@ def _get_matching_products(items_data):
         if item.get('category'):
             product_filters &= Q(categories__name__iexact=item['category'])
         
-        if item.get('color'):
-            variant_filters &= Q(color__iexact=item['color'])
+        # Handle colors (plural from new prompt)
+        colors = item.get('colors', [])
+        if not colors and item.get('color'): # Fallback for old structure
+            colors = [item.get('color')]
+
+        if colors:
+            color_q = Q()
+            for c in colors:
+                color_q |= Q(color__iexact=c)
+            variant_filters &= color_q
 
         if item.get('features'):
-            for feature_key, feature_value in item['features'].items():
-                # Handle list or single value
-                raw_value = feature_value[0] if isinstance(feature_value, list) else feature_value
-                value_to_match = normalize_filter_value(raw_value)
-                product_filters &= Q(features__contains={feature_key: value_to_match})
+            for feature_key, feature_values in item['features'].items():
+                # Ensure we have a list of values
+                if not isinstance(feature_values, list):
+                    feature_values = [feature_values]
+
+                feature_q = Q()
+                for val in feature_values:
+                    value_to_match = normalize_filter_value(val)
+                    feature_q |= Q(features__contains={feature_key: value_to_match})
+                product_filters &= feature_q
 
         matching_products_queryset = Product.objects.filter(product_filters).prefetch_related('variants__images')
         if variant_filters:
