@@ -350,7 +350,11 @@ def product_list(request, category_slug=None):
     # --- Dynamic Feature & Brightness Filtering ---
     available_features = []
     selected_features = {} 
-    all_brightness_values = []
+    
+    ai_brightness_values = ai_filters.get('brightness', [])
+    manual_brightness_values = request.GET.getlist('feat_brightness') 
+    all_brightness_values = list(set([str(v).lower() for v in ai_brightness_values + manual_brightness_values if str(v).strip()]))
+
     if category:
         schemas = load_category_schemas()
         target_schema = next((s for k, s in schemas.items() if k.lower() in category.name.lower()), None)
@@ -385,13 +389,6 @@ def product_list(request, category_slug=None):
                 attr['selected_values'] = final_selected_values
                 if final_selected_values:
                     selected_features[key] = final_selected_values
-
-            # The all_brightness_values part for variant filtering.
-            ai_brightness_values = ai_filters.get('brightness', [])
-            manual_brightness_values = request.GET.getlist('feat_brightness') # this is still needed for side panel
-            
-            # Ensure all_brightness_values correctly includes both AI and manual sources
-            all_brightness_values = list(set([str(v).lower() for v in ai_brightness_values + manual_brightness_values if str(v).strip()]))
 
     # After populating selected_features with positive filters,
     # now overlay negative filters for UI display where applicable.
@@ -676,17 +673,25 @@ def _get_matching_products(items_data):
         if variant_filters:
             matching_products_queryset = matching_products_queryset.filter(variants__in=ProductVariant.objects.filter(variant_filters))
         
-        # Exclude already seen products
-        matching_products_queryset = matching_products_queryset.exclude(id__in=seen_product_ids).distinct().order_by('?')[:MAX_PRODUCTS_PER_ITEM]
+        # Refactored deduplication logic
+        candidates_queryset = matching_products_queryset.exclude(id__in=seen_product_ids).distinct().order_by('?')[:MAX_PRODUCTS_PER_ITEM * 3]
 
-        # Assign display images
+        unique_candidates = []
+        local_seen = set()
+        for p in candidates_queryset:
+            if p.id not in local_seen:
+                unique_candidates.append(p)
+                local_seen.add(p.id)
+        
+        final_products = unique_candidates[:MAX_PRODUCTS_PER_ITEM]
         products_with_display_images = _assign_display_images(
-            list(matching_products_queryset),
-            [item['color'].lower()] if item.get('color') else [],
+            final_products, 
+            [item['color'].lower()] if item.get('color') else [], 
             []
         )
 
         category_products = []
+        seen_urls = set()
         for p in products_with_display_images:
             seen_product_ids.add(p.id)
             
@@ -700,15 +705,14 @@ def _get_matching_products(items_data):
                 
                 images_to_show = all_v_images[:2]
             
-            # If no variant images, try product images fallback? 
-            # (Usually covered by _assign_display_images fallback logic which finds a variant)
-            
             for img in images_to_show:
-                 category_products.append({
-                    'product_name': p.name,
-                    'product_slug': p.slug,
-                    'image_url': img.image.url
-                })
+                 if img.image.url not in seen_urls:
+                     category_products.append({
+                        'product_name': p.name,
+                        'product_slug': p.slug,
+                        'image_url': img.image.url
+                    })
+                     seen_urls.add(img.image.url)
 
         # Always append, even if empty, to maintain index parity with input items
         example_products_output.append({

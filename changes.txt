@@ -1,0 +1,127 @@
+PROJECT UPDATES - SESSION LOG
+
+1. FEATURE: LOCALIZED SEARCH SUGGESTION ANIMATION
+File: store/templates/store/partials/smart_suggestion_alert.html
+Action: Add a hidden spinner next to the 'Add as New Query' button.
+Code change:
+Inside the div with id="smart-suggestion-alert", after the <button>, add:
+    <div id="suggestion-spinner" class="spinner-border text-primary ms-auto" role="status" style="display: none;">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+
+2. BUGFIX: SUGGESTION BAR PERSISTENCE & ANIMATION TRIGGER
+File: store/templates/store/product_list.html
+Action: Update 'addSuggestionAsNewQuery' function to handle htmx triggers and clear inputs correctly.
+Code change:
+Replace the old function with this:
+    function addSuggestionAsNewQuery(suggestedQuery) {
+        var searchForm = document.getElementById('searchForm');
+        var inputArea = document.getElementById('search-input-area');
+        
+        var input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'q';
+        input.value = suggestedQuery;
+        inputArea.appendChild(input);
+
+        var acceptedInput = document.createElement('input');
+        acceptedInput.type = 'hidden';
+        acceptedInput.name = 'accepted_suggestion';
+        acceptedInput.value = 'true';
+        inputArea.appendChild(acceptedInput);
+        
+        var suggestionAlert = document.getElementById('smart-suggestion-alert');
+        var btn = suggestionAlert.querySelector('button');
+        var spinner = document.getElementById('suggestion-spinner');
+        
+        if (btn) btn.style.display = 'none';
+        if (spinner) spinner.style.display = 'block';
+
+        var originalIndicator = searchForm.getAttribute('hx-indicator');
+        searchForm.setAttribute('hx-indicator', '#suggestion-spinner');
+
+        searchForm.addEventListener('htmx:afterRequest', function cleanup() {
+            searchForm.setAttribute('hx-indicator', originalIndicator);
+            searchForm.removeEventListener('htmx:afterRequest', cleanup);
+        });
+
+        htmx.trigger(searchForm, 'submit');
+    }
+
+3. BUGFIX: VISUAL SEARCH DUPLICATE PRODUCTS & IMAGES
+File: store/views.py
+Function: _get_matching_products
+Action: Implement Python-side deduplication by product ID and image URL.
+Code change:
+Inside the loop 'for item in items_data:', replace the matching_products_queryset evaluation with:
+        candidates_queryset = matching_products_queryset.exclude(id__in=seen_product_ids).distinct().order_by('?')[:MAX_PRODUCTS_PER_ITEM * 3]
+
+        unique_candidates = []
+        local_seen = set()
+        for p in candidates_queryset:
+            if p.id not in local_seen:
+                unique_candidates.append(p)
+                local_seen.add(p.id)
+        
+        final_products = unique_candidates[:MAX_PRODUCTS_PER_ITEM]
+        products_with_display_images = _assign_display_images(final_products, [item['color'].lower()] if item.get('color') else [], [])
+
+        category_products = []
+        seen_urls = set()
+        for p in products_with_display_images:
+            seen_product_ids.add(p.id)
+            # ... (image selection logic) ...
+            for img in images_to_show:
+                 if img.image.url not in seen_urls:
+                     category_products.append({
+                        'product_name': p.name,
+                        'product_slug': p.slug,
+                        'image_url': img.image.url
+                    })
+                     seen_urls.add(img.image.url)
+
+4. UI: BASIC FOOTER
+File: templates/base.html
+Action: Add footer before the final scripts.
+Code change:
+    <footer class="footer mt-5 py-5 bg-light border-top">
+        <div class="container text-center">
+            <p class="text-muted mb-0">© 2026 tAIlor Clothing Shop. All rights reserved.</p>
+        </div>
+    </footer>
+
+5. BUGFIX: BRIGHTNESS FILTERING IN 'ALL' CATEGORY
+File: store/views.py
+Function: product_list
+Action: Move brightness value extraction outside the 'if category:' block.
+Code change:
+Move these lines to run regardless of whether 'category' is truthy:
+    ai_brightness_values = ai_filters.get('brightness', [])
+    manual_brightness_values = request.GET.getlist('feat_brightness') 
+    all_brightness_values = list(set([str(v).lower() for v in ai_brightness_values + manual_brightness_values if str(v).strip()]))
+
+6. FEATURE: LOCALIZED QUERY DELETION ANIMATION & HTMX FIX
+File: store/templates/store/partials/search_input_area.html
+Action: Add spinner markup to query delete buttons.
+Code change:
+Replace the delete button inside the loop with:
+    <button class="btn btn-outline-secondary btn-sm border-start-0 query-delete-btn" type="button" onclick="removeQuery(this)">
+        <span class="delete-icon">×</span>
+        <div class="spinner-border spinner-border-sm d-none" role="status" style="width: 0.8rem; height: 0.8rem;"></div>
+    </button>
+
+File: store/templates/store/product_list.html
+Action: Update 'removeQuery' to trigger HTMX and show localized spinner.
+Code change:
+    function removeQuery(btn) {
+        btn.querySelector('.delete-icon').classList.add('d-none');
+        btn.querySelector('.spinner-border').classList.remove('d-none');
+        btn.disabled = true;
+
+        var group = btn.closest('.input-group');
+        var input = group.querySelector('input[name="q"]');
+        if (input) input.remove();
+
+        var form = document.getElementById('searchForm');
+        htmx.trigger(form, 'submit');
+    }

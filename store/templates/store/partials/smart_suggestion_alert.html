@@ -9,6 +9,9 @@
             onclick="addSuggestionAsNewQuery('{{ ai_search_summary.suggestion.suggested_query }}')">
         Add "{{ ai_search_summary.suggestion.suggested_query }}" as New Query
     </button>
+    <div id="suggestion-spinner" class="spinner-border text-primary ms-auto" role="status" style="display: none;">
+        <span class="visually-hidden">Loading...</span>
+    </div>
 </div>
 {% else %}
 <div id="smart-suggestion-alert" hx-swap-oob="true"></div>

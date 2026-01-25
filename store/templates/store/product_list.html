@@ -57,34 +57,50 @@
     });
 
     function removeQuery(btn) {
-        // Remove the input group
-        btn.closest('.input-group').remove();
-        // Submit the form to refresh results
-        document.getElementById('searchForm').submit();
+        btn.querySelector('.delete-icon').classList.add('d-none');
+        btn.querySelector('.spinner-border').classList.remove('d-none');
+        btn.disabled = true;
+
+        var group = btn.closest('.input-group');
+        var input = group.querySelector('input[name="q"]');
+        if (input) input.remove();
+
+        var form = document.getElementById('searchForm');
+        htmx.trigger(form, 'submit');
     }
 
     function addSuggestionAsNewQuery(suggestedQuery) {
         var searchForm = document.getElementById('searchForm');
+        var inputArea = document.getElementById('search-input-area');
+        
         var input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'q';
         input.value = suggestedQuery;
-        searchForm.appendChild(input);
+        inputArea.appendChild(input);
 
-        // Add hidden input to indicate suggestion was accepted
         var acceptedInput = document.createElement('input');
         acceptedInput.type = 'hidden';
         acceptedInput.name = 'accepted_suggestion';
         acceptedInput.value = 'true';
-        searchForm.appendChild(acceptedInput);
+        inputArea.appendChild(acceptedInput);
         
-        // Remove the suggestion box (client-side)
         var suggestionAlert = document.getElementById('smart-suggestion-alert');
-        if (suggestionAlert) {
-            suggestionAlert.remove(); 
-        }
+        var btn = suggestionAlert.querySelector('button');
+        var spinner = document.getElementById('suggestion-spinner');
+        
+        if (btn) btn.style.display = 'none';
+        if (spinner) spinner.style.display = 'block';
 
-        searchForm.submit();
+        var originalIndicator = searchForm.getAttribute('hx-indicator');
+        searchForm.setAttribute('hx-indicator', '#suggestion-spinner');
+
+        searchForm.addEventListener('htmx:afterRequest', function cleanup() {
+            searchForm.setAttribute('hx-indicator', originalIndicator);
+            searchForm.removeEventListener('htmx:afterRequest', cleanup);
+        });
+
+        htmx.trigger(searchForm, 'submit');
     }
 </script>
 

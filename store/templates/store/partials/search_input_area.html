@@ -48,7 +48,10 @@
         </div>
 
         <input type="hidden" name="q" value="{{ contrib.query }}">
-        <button class="btn btn-outline-secondary btn-sm border-start-0" type="button" onclick="removeQuery(this)">×</button>
+        <button class="btn btn-outline-secondary btn-sm border-start-0 query-delete-btn" type="button" onclick="removeQuery(this)">
+            <span class="delete-icon">×</span>
+            <div class="spinner-border spinner-border-sm d-none" role="status" style="width: 0.8rem; height: 0.8rem;"></div>
+        </button>
     </div>
     {% endfor %}
     
