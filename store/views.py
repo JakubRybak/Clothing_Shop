@@ -368,6 +368,15 @@ def product_list(request, category_slug=None):
                 ai_feature_values = ai_filters.get(key, [])
                 manual_values = request.GET.getlist(f'feat_{key}')
                 
+                # Store separated values for UI distinction
+                attr['manual_values'] = [str(v).lower() for v in manual_values]
+                attr['ai_values'] = []
+                for v in ai_feature_values:
+                    if isinstance(v, bool):
+                        attr['ai_values'].append(str(v).lower())
+                    else:
+                        attr['ai_values'].append(str(v).lower())
+
                 # Combine manual and AI values
                 # Ensure all values are consistently handled (e.g., converted to lowercase strings for comparisons)
                 combined_values = []
@@ -531,8 +540,12 @@ def product_list(request, category_slug=None):
         'all_sizes': all_sizes,
         'all_available_brightness_values': all_available_brightness_values,
         'selected_colors': combined_colors,
+        'manual_selected_colors': manual_colors,
+        'ai_selected_colors': ai_colors,
         'selected_sizes': selected_sizes,
         'selected_brightness': all_brightness_values,
+        'manual_selected_brightness': [str(b).lower() for b in manual_brightness_values],
+        'ai_selected_brightness': [str(b).lower() for b in ai_brightness_values],
         'available_features': available_features,
         'selected_features': selected_features,
         'ai_search_summary': ai_search_summary,
