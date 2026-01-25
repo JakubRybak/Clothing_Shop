@@ -14,11 +14,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('--file', type=str, default='results_subset.json', help='The JSON file to import')
+        parser.add_argument('--category', type=str, default='Coats', help='The category name to assign to products')
         parser.add_argument('--ai', action='store_true', help='Generate AI features using multithreading')
         parser.add_argument('--workers', type=int, default=5, help='Number of parallel AI workers')
 
     def handle(self, *args, **options):
         file_path = options['file']
+        category_name = options['category']
         use_ai = options['ai']
         max_workers = options['workers']
 
@@ -27,7 +29,6 @@ class Command(BaseCommand):
         # Product.objects.all().delete()
         
         # 2. Setup Category
-        category_name = "Coats"
         category, _ = Category.objects.get_or_create(
             name=category_name,
             defaults={'slug': slugify(category_name)}
