@@ -1,127 +1,264 @@
-PROJECT UPDATES - SESSION LOG
+Here is the list of changes made to the application (from "local" to "production" state) with detailed explanations and significantly larger code snippets to provide full context.
 
-1. FEATURE: LOCALIZED SEARCH SUGGESTION ANIMATION
-File: store/templates/store/partials/smart_suggestion_alert.html
-Action: Add a hidden spinner next to the 'Add as New Query' button.
-Code change:
-Inside the div with id="smart-suggestion-alert", after the <button>, add:
-    <div id="suggestion-spinner" class="spinner-border text-primary ms-auto" role="status" style="display: none;">
-        <span class="visually-hidden">Loading...</span>
-    </div>
+1. CHANGED LOGO
+Description:
+The text logo in the navbar was updated to "TAILOR" with "AI" highlighted. The HTML structure was changed in `base.html` and specific CSS styling was added to `styles.css`.
 
-2. BUGFIX: SUGGESTION BAR PERSISTENCE & ANIMATION TRIGGER
-File: store/templates/store/product_list.html
-Action: Update 'addSuggestionAsNewQuery' function to handle htmx triggers and clear inputs correctly.
-Code change:
-Replace the old function with this:
-    function addSuggestionAsNewQuery(suggestedQuery) {
-        var searchForm = document.getElementById('searchForm');
-        var inputArea = document.getElementById('search-input-area');
-        
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = 'q';
-        input.value = suggestedQuery;
-        inputArea.appendChild(input);
+Code Snippet (templates/base.html):
+```html
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm sticky-top">
+        <div class="container">
+            <a class="navbar-brand logo-brand" href="{% url 'product_list' %}">
+                T<span class="logo-ai">AI</span>LOR
+            </a>
+            <div class="navbar-nav ms-auto align-items-center gap-3">
+```
 
-        var acceptedInput = document.createElement('input');
-        acceptedInput.type = 'hidden';
-        acceptedInput.name = 'accepted_suggestion';
-        acceptedInput.value = 'true';
-        inputArea.appendChild(acceptedInput);
-        
-        var suggestionAlert = document.getElementById('smart-suggestion-alert');
-        var btn = suggestionAlert.querySelector('button');
-        var spinner = document.getElementById('suggestion-spinner');
-        
-        if (btn) btn.style.display = 'none';
-        if (spinner) spinner.style.display = 'block';
+Code Snippet (static/css/styles.css):
+```css
+/* Logo Styling */
+.navbar-brand.logo-brand {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 800; /* Extra bold */
+    font-size: 1.8rem;
+    letter-spacing: 3px; /* Wide spacing */
+    color: #fff !important;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+}
 
-        var originalIndicator = searchForm.getAttribute('hx-indicator');
-        searchForm.setAttribute('hx-indicator', '#suggestion-spinner');
+.logo-ai {
+    background: linear-gradient(135deg, #00c6ff 0%, #0072ff 100%); /* Bright Cyan to Blue */
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900; /* Even bolder */
+    padding: 0 2px;
+    filter: drop-shadow(0 0 8px rgba(0, 114, 255, 0.6)); /* Glow effect */
+    font-size: 2rem; /* Slightly larger */
+}
+```
 
-        searchForm.addEventListener('htmx:afterRequest', function cleanup() {
-            searchForm.setAttribute('hx-indicator', originalIndicator);
-            searchForm.removeEventListener('htmx:afterRequest', cleanup);
+2. CHANGED BUTTON 'VISUAL SEARCH'
+Description:
+The "Visual Search" button in the navbar was styled with a gradient background, rounded shape, and hover/active animations.
+
+Code Snippet (templates/base.html):
+```html
+            <div class="navbar-nav ms-auto align-items-center gap-3">
+                <a class="btn btn-visual-search rounded-pill" href="{% url 'visual_search' %}">
+                    <i class="bi bi-camera me-2"></i>Visual Search
+                </a>
+                <div id="menu-cart" class="d-inline-block">
+                    {% include 'store/partials/menu_cart.html' %}
+                </div>
+```
+
+Code Snippet (static/css/styles.css):
+```css
+/* Visual Search Button Enhancement */
+.btn-visual-search {
+    background: linear-gradient(135deg, #6610f2 0%, #0d6efd 100%);
+    border: none;
+    color: white !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(102, 16, 242, 0.4);
+    
+    /* Font Styling */
+    font-family: 'Segoe UI', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 10px 25px; /* Larger hit area */
+}
+
+.btn-visual-search:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(102, 16, 242, 0.5);
+    background: linear-gradient(135deg, #520dc2 0%, #0b5ed7 100%);
+}
+
+.btn-visual-search:active {
+    transform: translateY(-1px);
+}
+```
+
+3. CLICKABLE IMAGES REDIRECTING TO DETAILS
+Description:
+Product images in the product list grid are now wrapped in an anchor tag `<a>` that links to the product detail page, making the entire image area clickable. This logic handles both products with variants and simple products.
+
+Code Snippet (store/templates/store/partials/product_grid.html):
+```html
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0">
+            {% if product.display_variant %}
+                {% url 'product_detail' product.slug as base_url %}
+                {% with detail_url=base_url|url_params:product.display_variant_params %}
+                    <a href="{{ detail_url }}" class="text-decoration-none text-dark">
+                        {% if product.display_image %}
+                            <img src="{{ product.display_image.image.url }}" class="card-img-top bg-light" alt="{{ product.name }}" style="height: 350px; object-fit: contain;">
+                        {% else %}
+                            <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="height: 350px;">
+                                No Image
+                            </div>
+                        {% endif %}
+
+                        <div class="card-body p-2 text-center">
+                            <h6 class="card-title mb-1 text-truncate">{{ product.name }}</h6>
+                            <p class="card-text fw-bold">{{ product.price }} USD</p>
+                        </div>
+                    </a>
+                {% endwith %}
+            {% else %}
+                <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
+                    {% if product.display_image %}
+                        <img src="{{ product.display_image.image.url }}" class="card-img-top bg-light" alt="{{ product.name }}" style="height: 350px; object-fit: contain;">
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="height: 350px;">
+                            No Image
+                        </div>
+                    {% endif %}
+
+                    <div class="card-body p-2 text-center">
+                        <h6 class="card-title mb-1 text-truncate">{{ product.name }}</h6>
+                        <p class="card-text fw-bold">{{ product.price }} USD</p>
+                    </div>
+                </a>
+            {% endif %}
+            
+            <div class="card-footer bg-white border-top-0 p-2">
+                {% if product.display_variant %}
+```
+
+4. ANIMATION OF ADDING TO CART (ICON & BUTTON)
+Description:
+- Navbar Cart Icon: When the cart is updated (via HTMX), the cart container pulses (scales up and glows green).
+- Add to Cart Button: On the product detail page, clicking the button shows a "Adding..." spinner, and on success turns green with "Added to Cart!" text before reverting.
+
+Code Snippet (templates/base.html - Script):
+```html
+    <script>
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            // Check if the swapped content is the menu-cart
+            if (event.detail.target.id === 'menu-cart') {
+                var cartContainer = document.getElementById('menu-cart');
+                cartContainer.classList.add('cart-updated');
+                
+                // Remove class after animation to allow re-triggering
+                setTimeout(function() {
+                    cartContainer.classList.remove('cart-updated');
+                }, 400); // Matches animation duration
+            }
+        });
+    </script>
+```
+
+Code Snippet (static/css/styles.css - Animation Keyframes):
+```css
+/* Animation for Cart Update */
+@keyframes cart-pulse {
+    0% { transform: scale(1); color: rgba(255,255,255,0.55); } /* standard nav-link color */
+    50% { transform: scale(1.4); color: #198754; text-shadow: 0 0 5px #198754; } /* Success green with glow */
+    100% { transform: scale(1); color: rgba(255,255,255,0.55); }
+}
+
+.cart-updated {
+    animation: cart-pulse 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* bouncy effect */
+    display: inline-block; /* Ensure it respects transform */
+}
+```
+
+Code Snippet (static/js/product_detail.js - Button Logic):
+```javascript
+// Add-to-Cart Button Animation Logic
+document.addEventListener('DOMContentLoaded', function() {
+    const addToCartBtn = document.getElementById('add-to-cart-btn');
+    
+    if (addToCartBtn) {
+        // Store original text
+        let originalText = addToCartBtn.innerHTML;
+
+        // Ensure smooth color transition
+        addToCartBtn.style.transition = 'all 0.3s ease';
+
+        addToCartBtn.addEventListener('htmx:configRequest', function() {
+            // Loading State
+            addToCartBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Adding...';
+            addToCartBtn.disabled = true;
         });
 
-        htmx.trigger(searchForm, 'submit');
+        addToCartBtn.addEventListener('htmx:afterOnLoad', function(evt) {
+            if (evt.detail.xhr.status === 200) {
+                // Success State
+                addToCartBtn.classList.remove('btn-primary');
+                addToCartBtn.classList.add('btn-success');
+                addToCartBtn.innerHTML = 'Added to Cart! <span class="fw-bold">✓</span>';
+                
+                // Revert after 2 seconds
+                setTimeout(() => {
+                    addToCartBtn.classList.remove('btn-success');
+                    addToCartBtn.classList.add('btn-primary');
+                    addToCartBtn.innerHTML = originalText;
+                    addToCartBtn.disabled = false;
+                }, 2000);
+            } else {
+                // Error State (optional, revert immediately)
+                addToCartBtn.innerHTML = originalText;
+                addToCartBtn.disabled = false;
+            }
+        });
     }
+});
+```
 
-3. BUGFIX: VISUAL SEARCH DUPLICATE PRODUCTS & IMAGES
-File: store/views.py
-Function: _get_matching_products
-Action: Implement Python-side deduplication by product ID and image URL.
-Code change:
-Inside the loop 'for item in items_data:', replace the matching_products_queryset evaluation with:
-        candidates_queryset = matching_products_queryset.exclude(id__in=seen_product_ids).distinct().order_by('?')[:MAX_PRODUCTS_PER_ITEM * 3]
+5. PROMPT BAR & FILTER LOGIC (BADGES & REMOVAL)
+Description:
+- Badges: Filters that are set automatically by the AI (from the prompt) are distinguished from manual selections. They get a special "✨" badge if they were purely AI-detected.
+- Removal Logic: When the user removes a prompt (via the 'x' button), only the filters associated with that prompt (AI filters) are cleared. Filters manually checked by the user remain active because their inputs are not removed from the DOM.
 
-        unique_candidates = []
-        local_seen = set()
-        for p in candidates_queryset:
-            if p.id not in local_seen:
-                unique_candidates.append(p)
-                local_seen.add(p.id)
-        
-        final_products = unique_candidates[:MAX_PRODUCTS_PER_ITEM]
-        products_with_display_images = _assign_display_images(final_products, [item['color'].lower()] if item.get('color') else [], [])
-
-        category_products = []
-        seen_urls = set()
-        for p in products_with_display_images:
-            seen_product_ids.add(p.id)
-            # ... (image selection logic) ...
-            for img in images_to_show:
-                 if img.image.url not in seen_urls:
-                     category_products.append({
-                        'product_name': p.name,
-                        'product_slug': p.slug,
-                        'image_url': img.image.url
-                    })
-                     seen_urls.add(img.image.url)
-
-4. UI: BASIC FOOTER
-File: templates/base.html
-Action: Add footer before the final scripts.
-Code change:
-    <footer class="footer mt-5 py-5 bg-light border-top">
-        <div class="container text-center">
-            <p class="text-muted mb-0">© 2026 tAIlor Clothing Shop. All rights reserved.</p>
+Code Snippet (store/templates/store/partials/filter_sidebar_content.html - Badge Display):
+```html
+        <!-- Color Filter -->
+        <div class="mb-4">
+            <label class="form-label fw-bold">Color</label>
+            {% for color in all_colors %}
+            <div class="form-check">
+                {% if color|lower in manual_selected_colors %}
+                    <input class="form-check-input" type="checkbox" name="colors" value="{{ color|lower }}" id="color-{{ color|lower }}" checked>
+                {% elif color|lower in ai_selected_colors %}
+                    <input class="form-check-input" type="checkbox" name="ai_ignore_colors" data-real-name="colors" value="{{ color|lower }}" id="color-{{ color|lower }}" checked onchange="this.name=this.dataset.realName">
+                {% else %}
+                    <input class="form-check-input" type="checkbox" name="colors" value="{{ color|lower }}" id="color-{{ color|lower }}">
+                {% endif %}
+                
+                <label class="form-check-label" for="color-{{ color|lower }}">
+                    {{ color }}
+                    {% if color|lower in ai_selected_colors and color|lower not in manual_selected_colors %}
+                        <span class="badge text-dark ms-1" style="font-size: 0.7em;" title="Detected by AI">✨</span>
+                    {% endif %}
+                </label>
+            </div>
+            {% endfor %}
         </div>
-    </footer>
+```
 
-5. BUGFIX: BRIGHTNESS FILTERING IN 'ALL' CATEGORY
-File: store/views.py
-Function: product_list
-Action: Move brightness value extraction outside the 'if category:' block.
-Code change:
-Move these lines to run regardless of whether 'category' is truthy:
-    ai_brightness_values = ai_filters.get('brightness', [])
-    manual_brightness_values = request.GET.getlist('feat_brightness') 
-    all_brightness_values = list(set([str(v).lower() for v in ai_brightness_values + manual_brightness_values if str(v).strip()]))
-
-6. FEATURE: LOCALIZED QUERY DELETION ANIMATION & HTMX FIX
-File: store/templates/store/partials/search_input_area.html
-Action: Add spinner markup to query delete buttons.
-Code change:
-Replace the delete button inside the loop with:
-    <button class="btn btn-outline-secondary btn-sm border-start-0 query-delete-btn" type="button" onclick="removeQuery(this)">
-        <span class="delete-icon">×</span>
-        <div class="spinner-border spinner-border-sm d-none" role="status" style="width: 0.8rem; height: 0.8rem;"></div>
-    </button>
-
-File: store/templates/store/product_list.html
-Action: Update 'removeQuery' to trigger HTMX and show localized spinner.
-Code change:
+Code Snippet (templates/base.html - Removal Logic):
+```javascript
     function removeQuery(btn) {
+        // Show spinner, hide 'x'
         btn.querySelector('.delete-icon').classList.add('d-none');
         btn.querySelector('.spinner-border').classList.remove('d-none');
         btn.disabled = true;
 
+        // Find the hidden input in this group and remove it so it's not sent
         var group = btn.closest('.input-group');
         var input = group.querySelector('input[name="q"]');
         if (input) input.remove();
 
+        // Use htmx to trigger the form submission
         var form = document.getElementById('searchForm');
         htmx.trigger(form, 'submit');
     }
+```
