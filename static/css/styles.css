@@ -134,3 +134,42 @@
     filter: drop-shadow(0 0 8px rgba(0, 114, 255, 0.6)); /* Glow effect */
     font-size: 2rem; /* Slightly larger */
 }
+
+/* Animation for Cart Update */
+@keyframes cart-pulse {
+    0% { transform: scale(1); color: rgba(255,255,255,0.55); } /* standard nav-link color */
+    50% { transform: scale(1.4); color: #198754; text-shadow: 0 0 5px #198754; } /* Success green with glow */
+    100% { transform: scale(1); color: rgba(255,255,255,0.55); }
+}
+
+.cart-updated {
+    animation: cart-pulse 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* bouncy effect */
+    display: inline-block; /* Ensure it respects transform */
+}
+
+/* Visual Search Button Enhancement */
+.btn-visual-search {
+    background: linear-gradient(135deg, #6610f2 0%, #0d6efd 100%);
+    border: none;
+    color: white !important;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 4px 15px rgba(102, 16, 242, 0.4);
+
+    /* Font Styling */
+    font-family: 'Segoe UI', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 10px 25px; /* Larger hit area */
+}
+
+.btn-visual-search:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 8px 25px rgba(102, 16, 242, 0.5);
+    background: linear-gradient(135deg, #520dc2 0%, #0b5ed7 100%);
+}
+
+.btn-visual-search:active {
+    transform: translateY(-1px);
+}

@@ -10,9 +10,9 @@
     {% include 'store/partials/page_header.html' %}
 
     <form method="get" class="d-flex flex-grow-1 mx-4 align-items-start" id="searchForm"
-          hx-get="{{ request.path }}" 
-          hx-target="#product-grid" 
-          hx-swap="outerHTML" 
+          hx-get="{{ request.path }}"
+          hx-target="#product-grid"
+          hx-swap="outerHTML"
           hx-push-url="true"
           hx-include="#filter-sidebar form"
           hx-indicator="#search-btn">
@@ -57,14 +57,17 @@
     });
 
     function removeQuery(btn) {
+        // Show spinner, hide 'x'
         btn.querySelector('.delete-icon').classList.add('d-none');
         btn.querySelector('.spinner-border').classList.remove('d-none');
         btn.disabled = true;
 
+        // Find the hidden input in this group and remove it so it's not sent
         var group = btn.closest('.input-group');
         var input = group.querySelector('input[name="q"]');
         if (input) input.remove();
 
+        // Use htmx to trigger the form submission
         var form = document.getElementById('searchForm');
         htmx.trigger(form, 'submit');
     }
@@ -72,29 +75,33 @@
     function addSuggestionAsNewQuery(suggestedQuery) {
         var searchForm = document.getElementById('searchForm');
         var inputArea = document.getElementById('search-input-area');
-        
+
         var input = document.createElement('input');
         input.type = 'hidden';
         input.name = 'q';
         input.value = suggestedQuery;
         inputArea.appendChild(input);
 
+        // Add hidden input to indicate suggestion was accepted
         var acceptedInput = document.createElement('input');
         acceptedInput.type = 'hidden';
         acceptedInput.name = 'accepted_suggestion';
         acceptedInput.value = 'true';
         inputArea.appendChild(acceptedInput);
-        
+
+        // Handle Animation: Switch indicator to local spinner
         var suggestionAlert = document.getElementById('smart-suggestion-alert');
         var btn = suggestionAlert.querySelector('button');
         var spinner = document.getElementById('suggestion-spinner');
-        
+
         if (btn) btn.style.display = 'none';
         if (spinner) spinner.style.display = 'block';
 
+        // Temporarily change the form's indicator to avoid triggering the main search spinner
         var originalIndicator = searchForm.getAttribute('hx-indicator');
         searchForm.setAttribute('hx-indicator', '#suggestion-spinner');
 
+        // Reset indicator after request
         searchForm.addEventListener('htmx:afterRequest', function cleanup() {
             searchForm.setAttribute('hx-indicator', originalIndicator);
             searchForm.removeEventListener('htmx:afterRequest', cleanup);

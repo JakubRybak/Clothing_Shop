@@ -10,7 +10,7 @@
     {% if not request.path|startswith:'/admin/' %}
         <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     {% endif %}
-    <link href="{% static 'css/styles.css' %}?v=17" rel="stylesheet">
+    <link href="{% static 'css/styles.css' %}?v=19" rel="stylesheet">
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
@@ -20,8 +20,10 @@
                 T<span class="logo-ai">AI</span>LOR
             </a>
             <div class="navbar-nav ms-auto align-items-center gap-3">
-                <a class="nav-link" href="{% url 'visual_search' %}">📸 Visual Search</a>
-                <div id="menu-cart" class="d-inline">
+                <a class="btn btn-visual-search rounded-pill" href="{% url 'visual_search' %}">
+                    <i class="bi bi-camera me-2"></i>Visual Search
+                </a>
+                <div id="menu-cart" class="d-inline-block">
                     {% include 'store/partials/menu_cart.html' %}
                 </div>
                 {% if user.is_authenticated %}
@@ -60,5 +62,19 @@
 
     <script src="{% static 'js/sidebar.js' %}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.body.addEventListener('htmx:afterSwap', function(event) {
+            // Check if the swapped content is the menu-cart
+            if (event.detail.target.id === 'menu-cart') {
+                var cartContainer = document.getElementById('menu-cart');
+                cartContainer.classList.add('cart-updated');
+
+                // Remove class after animation to allow re-triggering
+                setTimeout(function() {
+                    cartContainer.classList.remove('cart-updated');
+                }, 400); // Matches animation duration
+            }
+        });
+    </script>
 </body>
 </html>

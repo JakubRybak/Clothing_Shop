@@ -1,15 +1,15 @@
 {% load store_filters %}
 <h5 class="px-3 mb-3 border-bottom pb-2 mt-3">Filters</h5>
 <div class="px-3">
-    <form method="get" 
-            hx-get="{{ request.path }}" 
-            hx-target="#grid-container" 
+    <form method="get"
+            hx-get="{{ request.path }}"
+            hx-target="#grid-container"
             hx-trigger="change, keyup delay:500ms from:input[type='number']"
             hx-swap="innerHTML"
             hx-push-url="true"
             hx-include="#searchForm"
             hx-indicator="#search-btn">
-        
+
         <!-- Price Filter -->
         <div class="mb-4">
             <label class="form-label fw-bold">Price Range</label>
@@ -24,10 +24,19 @@
             <label class="form-label fw-bold">Color</label>
             {% for color in all_colors %}
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="colors" value="{{ color|lower }}" id="color-{{ color|lower }}"
-                    {% if color|lower in selected_colors %}checked{% endif %}>
+                {% if color|lower in manual_selected_colors %}
+                    <input class="form-check-input" type="checkbox" name="colors" value="{{ color|lower }}" id="color-{{ color|lower }}" checked>
+                {% elif color|lower in ai_selected_colors %}
+                    <input class="form-check-input" type="checkbox" name="ai_ignore_colors" data-real-name="colors" value="{{ color|lower }}" id="color-{{ color|lower }}" checked onchange="this.name=this.dataset.realName">
+                {% else %}
+                    <input class="form-check-input" type="checkbox" name="colors" value="{{ color|lower }}" id="color-{{ color|lower }}">
+                {% endif %}
+
                 <label class="form-check-label" for="color-{{ color|lower }}">
                     {{ color }}
+                    {% if color|lower in ai_selected_colors and color|lower not in manual_selected_colors %}
+                        <span class="badge text-dark ms-1" style="font-size: 0.7em;" title="Detected by AI">✨</span>
+                    {% endif %}
                 </label>
             </div>
             {% endfor %}
@@ -53,10 +62,19 @@
             <label class="form-label fw-bold">Brightness</label>
             {% for brightness in all_available_brightness_values %}
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" name="feat_brightness" value="{{ brightness }}" id="brightness-{{ brightness }}"
-                    {% if brightness in selected_brightness %}checked{% endif %}>
+                {% if brightness in manual_selected_brightness %}
+                    <input class="form-check-input" type="checkbox" name="feat_brightness" value="{{ brightness }}" id="brightness-{{ brightness }}" checked>
+                {% elif brightness in ai_selected_brightness %}
+                    <input class="form-check-input" type="checkbox" name="ai_ignore_brightness" data-real-name="feat_brightness" value="{{ brightness }}" id="brightness-{{ brightness }}" checked onchange="this.name=this.dataset.realName">
+                {% else %}
+                    <input class="form-check-input" type="checkbox" name="feat_brightness" value="{{ brightness }}" id="brightness-{{ brightness }}">
+                {% endif %}
+
                 <label class="form-check-label text-capitalize" for="brightness-{{ brightness }}">
                     {{ brightness }}
+                    {% if brightness in ai_selected_brightness and brightness not in manual_selected_brightness %}
+                        <span class="badge text-dark ms-1" style="font-size: 0.7em;" title="Detected by AI">✨</span>
+                    {% endif %}
                 </label>
             </div>
             {% endfor %}
@@ -76,26 +94,48 @@
                     <i class="bi bi-info-circle ms-2" data-bs-toggle="tooltip" data-bs-placement="top" title="{{ attribute_suggestions|get_item:attr.key }}"></i>
                 {% endif %}
             </label>
-            
+
             {% if attr.type == 'boolean' %}
                 <div class="d-flex flex-column gap-1">
                     <!-- Any (Clear) -->
                     <div class="form-check">
                         <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="" id="feat-{{ attr.key }}-any"
-                            {% if not attr.selected_values or '' in attr.selected_values %}checked{% endif %}>
+                            {% if not attr.manual_values or '' in attr.manual_values %}checked{% endif %}>
                         <label class="form-check-label text-muted" for="feat-{{ attr.key }}-any">Any</label>
                     </div>
                     <!-- Yes -->
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="true" id="feat-{{ attr.key }}-yes"
-                            {% if True in attr.selected_values %}checked{% endif %}>
-                        <label class="form-check-label" for="feat-{{ attr.key }}-yes">Yes</label>
+                        {% if 'true' in attr.manual_values %}
+                            <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="true" id="feat-{{ attr.key }}-yes" checked>
+                        {% elif 'true' in attr.ai_values %}
+                            <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="true" id="feat-{{ attr.key }}-yes" checked form="ai_ignore" onclick="this.removeAttribute('form')">
+                        {% else %}
+                            <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="true" id="feat-{{ attr.key }}-yes">
+                        {% endif %}
+
+                        <label class="form-check-label" for="feat-{{ attr.key }}-yes">
+                            Yes
+                            {% if 'true' in attr.ai_values and 'true' not in attr.manual_values %}
+                                <span class="badge text-dark ms-1" style="font-size: 0.7em;">✨</span>
+                            {% endif %}
+                        </label>
                     </div>
                     <!-- No -->
                     <div class="form-check">
-                        <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="false" id="feat-{{ attr.key }}-no"
-                            {% if False in attr.selected_values %}checked{% endif %}>
-                        <label class="form-check-label" for="feat-{{ attr.key }}-no">No</label>
+                        {% if 'false' in attr.manual_values %}
+                            <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="false" id="feat-{{ attr.key }}-no" checked>
+                        {% elif 'false' in attr.ai_values %}
+                            <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="false" id="feat-{{ attr.key }}-no" checked form="ai_ignore" onclick="this.removeAttribute('form')">
+                        {% else %}
+                            <input class="form-check-input" type="radio" name="feat_{{ attr.key }}" value="false" id="feat-{{ attr.key }}-no">
+                        {% endif %}
+
+                        <label class="form-check-label" for="feat-{{ attr.key }}-no">
+                            No
+                            {% if 'false' in attr.ai_values and 'false' not in attr.manual_values %}
+                                <span class="badge text-dark ms-1" style="font-size: 0.7em;">✨</span>
+                            {% endif %}
+                        </label>
                     </div>
                 </div>
             {% elif attr.options %}
@@ -103,14 +143,19 @@
                 {% for option in attr.options %}
                     {% if option|lower != 'unknown' %}
                     <div class="form-check">
-                        <input class="form-check-input" 
-                               type="checkbox" 
-                               name="feat_{{ attr.key }}" 
-                               value="{{ option }}" 
-                               id="feat-{{ attr.key }}-{{ option }}"
-                               {% if option|lower in attr.selected_values %}checked{% endif %}>
+                        {% if option|lower in attr.manual_values %}
+                            <input class="form-check-input" type="checkbox" name="feat_{{ attr.key }}" value="{{ option }}" id="feat-{{ attr.key }}-{{ option }}" checked>
+                        {% elif option|lower in attr.ai_values %}
+                            <input class="form-check-input" type="checkbox" name="ai_ignore_{{ attr.key }}" data-real-name="feat_{{ attr.key }}" value="{{ option }}" id="feat-{{ attr.key }}-{{ option }}" checked onchange="this.name=this.dataset.realName">
+                        {% else %}
+                            <input class="form-check-input" type="checkbox" name="feat_{{ attr.key }}" value="{{ option }}" id="feat-{{ attr.key }}-{{ option }}">
+                        {% endif %}
+
                         <label class="form-check-label text-capitalize" for="feat-{{ attr.key }}-{{ option }}">
                             {{ option }}
+                            {% if option|lower in attr.ai_values and option|lower not in attr.manual_values %}
+                                <span class="badge text-dark ms-1" style="font-size: 0.7em;">✨</span>
+                            {% endif %}
                         </label>
                     </div>
                     {% endif %}
