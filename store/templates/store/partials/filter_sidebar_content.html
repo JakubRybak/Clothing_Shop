@@ -32,7 +32,8 @@
                     <input class="form-check-input" type="checkbox" name="colors" value="{{ color|lower }}" id="color-{{ color|lower }}">
                 {% endif %}
 
-                <label class="form-check-label" for="color-{{ color|lower }}">
+                <label class="form-check-label d-flex align-items-center" for="color-{{ color|lower }}">
+                    <span class="color-square me-2" style="background: {{ color_hexes|get_item:color }}; width: 14px; height: 14px; border: 1px solid #dee2e6; display: inline-block; border-radius: 2px;"></span>
                     {{ color }}
                     {% if color|lower in ai_selected_colors and color|lower not in manual_selected_colors %}
                         <span class="badge text-dark ms-1" style="font-size: 0.7em;" title="Detected by AI">✨</span>

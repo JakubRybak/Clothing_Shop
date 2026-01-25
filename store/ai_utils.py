@@ -7,6 +7,7 @@ from google.oauth2 import service_account
 from django.conf import settings
 from django.core.cache import cache
 from .models import Product, ProductImage, ProductVariant
+from .constants import COLOR_MAPPING, get_color_family, COLOR_GROUPS
 
 # Load credentials and project settings
 PROJECT_ID = os.getenv("GCP_PROJECT_ID", "advanced-searching-pdf")
@@ -243,12 +244,12 @@ def process_search_query(user_query, current_category_name=None):
 
         prompt = f"Analyze search query: '{user_query}'\n"
         prompt += f"Context: User is searching in category '{target_category}'.\n"
-        prompt += f"Available Colors: {', '.join(available_product_colors)}. Prioritize these.\n\n"
+        prompt += f"Allowed Color Groups: {', '.join(COLOR_GROUPS)}. You MUST pick colors ONLY from this list.\n\n"
         prompt += "Available Features:\n" + "\n".join(prompt_schema) + "\n\n"
         
         prompt += " Instructions:\n"
         prompt += "1. Identify features from the list (including 'brightness') that are EXPLICITLY mentioned or VERY STRONGLY implied by the query.\n"
-        prompt += "2. **STRICT COLOR DETECTION**: Extract colors ONLY if they are an EXACT match (case-insensitive) for a color in the 'Available Colors' list provided above. If the query mentions a color NOT in the list, DO NOT include it in the 'colors' array. DO NOT infer brightness or color_pattern from these exact color matches.\n"
+        prompt += "2. **COLOR DETECTION**: Extract colors ONLY if they belong to the 'Allowed Color Groups' list. If the user mentions a specific shade (e.g. 'navy'), map it to the closest group (e.g. 'Blue').\n"
         prompt += "3. Extract values for identified features. Use exact option names (e.g., 'dark' for 'brightness').\n"
         prompt += "4. **AVOID INFERENCE**: DO NOT infer 'brightness' or 'color_pattern' unless EXPLICITLY mentioned or very strongly implied, and only if no direct color match was found (e.g., 'dark coat' implies brightness:dark, but 'black coat' implies color:black, NOT brightness:dark or color_pattern:solid).\n"
         prompt += "5. EXCLUSIONS (Negative Logic): If the query explicitly uses NEGATIVE language (e.g., 'not', 'no', 'without', 'except'), extract those features into `negative_filters` and `negative_colors`.\n"
@@ -450,6 +451,8 @@ def api_identify_items(image_file, box=None, user_context=None):
         prompt += f"""
         Identify visible clothing items. Map them to one of these categories: {list(CATEGORY_SCHEMAS.keys())}.
         
+        ALLOWED COLOR GROUPS: {', '.join(COLOR_GROUPS)}. You MUST pick colors ONLY from this list.
+        
         CRITICAL: For the 'features' dictionary, you MUST use ONLY the allowed keys listed below:
         {schema_guidance}
         
@@ -465,7 +468,7 @@ def api_identify_items(image_file, box=None, user_context=None):
                 {{
                     "name": "Display Name", 
                     "category": "ExactCategoryName", 
-                    "colors": ["Color A", "Color B"],
+                    "colors": ["Allowed Color Group 1", "Allowed Color Group 2"],
                     "features": {{
                         "allowed_key_1": [true],
                         "allowed_key_2": ["exact_option_value_1", "exact_option_value_2"]

@@ -25,7 +25,7 @@ COLOR_MAPPING = {
     # Pink Family
     'pink': 'Pink', 'dusty rose': 'Pink', 'magenta': 'Pink', 'fuchsia': 'Pink',
     'rose': 'Pink', 'salmon': 'Pink', 'coral': 'Pink', 'hot pink': 'Pink',
-    'blush': 'Pink', 'peach': 'Pink',
+    'blush': 'Pink', 'peach': 'Pink', 'pastel pink': 'Pastel pink',
 
     # Brown Family
     'brown': 'Brown', 'dark brown': 'Brown', 'dusty brown': 'Brown', 'golden brown': 'Brown',
@@ -41,7 +41,7 @@ COLOR_MAPPING = {
     # Yellow/Orange Family
     'yellow': 'Yellow', 'gold': 'Yellow', 'mustard': 'Yellow', 'canary': 'Yellow',
     'lemon': 'Yellow', 'amber': 'Orange', 'orange': 'Orange', 'rust': 'Orange',
-    'burnt orange': 'Orange', 'apricot': 'Orange', 'tangerine': 'Orange',
+    'burnt orange': 'Orange', 'apricot': 'Orange', 'tangerine': 'Orange', 'light yellow': 'Light yellow',
 
     # White/Neutral Family
     'cream': 'White', 'nude': 'White', 'ivory': 'White', 'off-white': 'White',
@@ -50,8 +50,46 @@ COLOR_MAPPING = {
     # Black Family
     'black': 'Black', 'jet black': 'Black', 'onyx': 'Black', 'pitch black': 'Black',
 
+    # New & Specific Mappings requested
+    'aqua': 'Aqua',
+    'blue jeans': 'Blue jeans',
+    'dark grey jeans': 'Dark grey jeans',
+    'golden': 'Golden',
+    'hyacinth': 'Hyacinth',
+    'wheat': 'Wheat',
+
     # Special
     'multicolor': 'Multicolor',
+}
+
+# The list of general color groups Gemini is forced to pick from
+COLOR_GROUPS = [
+    "Aqua", "Black", "Blue", "Blue jeans", "Brown", "Dark grey jeans", 
+    "Golden", "Green", "Grey", "Hyacinth", "Light yellow", "Multicolor", 
+    "Pastel pink", "Pink", "Purple", "Red", "Wheat", "White"
+]
+
+# Mapping for UI color squares (Hex/CSS values)
+COLOR_HEX_MAPPING = {
+    'Aqua': '#00FFFF',
+    'Black': '#000000',
+    'Blue': '#0000FF',
+    'Blue jeans': '#5d8aa8',
+    'Brown': '#8B4513',
+    'Dark grey jeans': '#4a4e4d',
+    'Golden': '#FFD700',
+    'Green': '#008000',
+    'Grey': '#808080',
+    'Hyacinth': '#9370DB',
+    'Light yellow': '#FFFFE0',
+    'Multicolor': 'linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet)',
+    'Pastel pink': '#FFD1DC',
+    'Pink': '#FFC0CB',
+    'Purple': '#800080',
+    'Red': '#FF0000',
+    'Wheat': '#F5DEB3',
+    'White': '#FFFFFF',
+    'Orange': '#FFA500', # Fallback for mapping
 }
 
 def get_color_family(specific_color):

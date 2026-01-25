@@ -12,7 +12,7 @@ import json
 from .models import Product, ProductVariant, Category
 from .cart import Cart
 from .ai_utils import load_category_schemas, process_search_query, api_detect_people, api_identify_items
-from .constants import COLOR_MAPPING, get_color_family
+from .constants import COLOR_MAPPING, get_color_family, COLOR_HEX_MAPPING
 
 
 def normalize_filter_value(value):
@@ -582,6 +582,7 @@ def product_list(request, category_slug=None):
         'products': products_list,
         'selected_category': category,
         'all_colors': all_colors, # Now contains families
+        'color_hexes': COLOR_HEX_MAPPING,
         'all_sizes': all_sizes,
         'all_available_brightness_values': all_available_brightness_values,
         'selected_colors': combined_color_families, # Updated to use families
