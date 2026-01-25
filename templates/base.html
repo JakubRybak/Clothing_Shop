@@ -10,7 +10,7 @@
     {% if not request.path|startswith:'/admin/' %}
         <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     {% endif %}
-    <link href="{% static 'css/styles.css' %}?v=13" rel="stylesheet">
+    <link href="{% static 'css/styles.css' %}?v=17" rel="stylesheet">
 </head>
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
