@@ -58,7 +58,7 @@
     <div class="d-flex w-100">
         <input class="form-control me-2" type="search" name="q"
                placeholder="{% if query_contributions %}Add another condition (e.g. 'black'){% else %}Search (e.g. 'Dark coat with belt'){% endif %}"
-               aria-label="Search" autofocus>
+               aria-label="Search" autofocus hx-disable>
         <button class="btn btn-outline-success" type="submit" id="search-btn">
             <span class="search-icon-text">Search</span>
             <div class="spinner-border spinner-border-sm search-spinner" role="status">

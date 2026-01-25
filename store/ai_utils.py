@@ -456,7 +456,8 @@ def api_identify_items(image_file, box=None, user_context=None):
         INSTRUCTIONS FOR BROAD SEARCH:
         1. **Do not be overly restrictive.** If an item's style, length, or color is ambiguous or could fit multiple categories (e.g., it looks like both a 'wool_coat' and a 'blazer'), include ALL relevant options in the list.
         2. **Multi-value support**: Return 'colors' as a list and each feature value in 'features' as a list of strings/booleans.
-        3. Aim to provide 1-3 likely options for ambiguous features.
+        3. **CRITICAL: Single-value for logic**: For features that are naturally binary/boolean (e.g., "Has buttons") or radio-like, do NOT return both True and False. Pick the most likely one. Only return multiple values for truly multi-choice attributes like style categories or colors.
+        4. Aim to provide 1-3 likely options for ambiguous features.
 
         Return JSON:
         {{
