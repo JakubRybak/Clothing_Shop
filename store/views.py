@@ -511,12 +511,15 @@ def product_list(request, category_slug=None):
     # --- REFACTORED Filtering on Variants ---
     # Use expanded_specific_colors instead of combined_colors (which was families)
     if expanded_specific_colors and all_brightness_values:
-        products = products.annotate(lower_color=Lower('variants__color')).filter(
-            lower_color__in=expanded_specific_colors,
+        products = products.filter(
+            variants__color__in=expanded_specific_colors,
             variants__brightness__in=all_brightness_values
         ).distinct()
     elif expanded_specific_colors:
-        products = products.annotate(lower_color=Lower('variants__color')).filter(lower_color__in=expanded_specific_colors).distinct()      
+        # Filter directly on the variant relationship. 
+        # Using __in with the list is cleaner and prevents .distinct() from failing 
+        # due to annotated fields from different variants.
+        products = products.filter(variants__color__in=expanded_specific_colors).distinct()      
     elif all_brightness_values:
         products = products.filter(variants__brightness__in=all_brightness_values).distinct()
 
