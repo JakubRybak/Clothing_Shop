@@ -791,9 +791,11 @@ def _get_matching_products(items_data):
                 local_seen.add(p.id)
         
         final_products = unique_candidates[:MAX_PRODUCTS_PER_ITEM]
+        
+        # Use the 'colors' list (plural) which we extracted earlier in the function
         products_with_display_images = _assign_display_images(
             final_products, 
-            [item['color'].lower()] if item.get('color') else [], 
+            [c.lower() for c in colors], 
             []
         )
 
@@ -802,6 +804,11 @@ def _get_matching_products(items_data):
         for p in products_with_display_images:
             seen_product_ids.add(p.id)
             
+            # Construct URL with color parameter if a specific variant was matched
+            product_url = reverse('product_detail', args=[p.slug])
+            if p.display_variant and p.display_variant.color:
+                product_url += f"?color={quote(p.display_variant.color)}"
+
             images_to_show = []
             if p.display_variant:
                 all_v_images = list(p.display_variant.images.all())
@@ -816,7 +823,7 @@ def _get_matching_products(items_data):
                  if img.image.url not in seen_urls:
                      category_products.append({
                         'product_name': p.name,
-                        'product_slug': p.slug,
+                        'product_url': product_url,
                         'image_url': img.image.url
                     })
                      seen_urls.add(img.image.url)
