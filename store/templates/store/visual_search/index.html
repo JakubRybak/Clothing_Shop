@@ -488,13 +488,9 @@
                     col.innerHTML = `
                         <div class="card h-100 shadow-sm border-0" style="width: 120px;">
                             <img src="${product.image_url}" class="card-img-top rounded" alt="${product.product_name}" style="height: 120px; width: 120px; object-fit: contain; background-color: #f8f9fa;">
-                            <a href="#" class="stretched-link"></a>
+                            <a href="${product.product_url}" class="stretched-link"></a>
                         </div>
                     `;
-                    // Replace SLUG_PLACEHOLDER with actual slug.
-                    const productDetailUrl = "{% url 'product_detail' 'SLUG_PLACEHOLDER' %}".replace('SLUG_PLACEHOLDER', product.product_slug);
-                    col.querySelector('a').href = productDetailUrl;
-
                     row.appendChild(col);
                 });
                 container.appendChild(row);
