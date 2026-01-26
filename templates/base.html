@@ -15,14 +15,21 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm sticky-top">
-        <div class="container">
-            <a class="navbar-brand logo-brand" href="{% url 'product_list' %}">
-                T<span class="logo-ai">AI</span>LOR
-            </a>
-            <div class="navbar-nav ms-auto align-items-center gap-3">
+        <div class="container position-relative">
+            <!-- Left: Visual Search -->
+            <div class="d-flex align-items-center">
                 <a class="btn btn-visual-search rounded-pill" href="{% url 'visual_search' %}">
                     <i class="bi bi-camera me-2"></i>Visual Search
                 </a>
+            </div>
+
+            <!-- Center: Logo -->
+            <a class="navbar-brand logo-brand position-absolute top-50 start-50 translate-middle" href="{% url 'product_list' %}">
+                T<span class="logo-ai">AI</span>LOR
+            </a>
+
+            <!-- Right: Cart & Auth -->
+            <div class="navbar-nav ms-auto align-items-center gap-3">
                 <div id="menu-cart" class="d-inline-block">
                     {% include 'store/partials/menu_cart.html' %}
                 </div>
