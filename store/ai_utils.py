@@ -250,21 +250,23 @@ def process_search_query(user_query, current_category_name=None):
         prompt += " Instructions:\n"
         prompt += "1. Identify features from the list (including 'brightness') that are EXPLICITLY mentioned or VERY STRONGLY implied by the query.\n"
         prompt += "2. **COLOR DETECTION**: Extract colors ONLY if they belong to the 'Allowed Color Groups' list. If the user mentions a specific shade (e.g. 'navy'), map it to the closest group (e.g. 'Blue').\n"
-        prompt += "3. Extract values for identified features. Use exact option names (e.g., 'dark' for 'brightness').\n"
-        prompt += "4. **AVOID INFERENCE**: DO NOT infer 'brightness' or 'color_pattern' unless EXPLICITLY mentioned or very strongly implied, and only if no direct color match was found (e.g., 'dark coat' implies brightness:dark, but 'black coat' implies color:black, NOT brightness:dark or color_pattern:solid).\n"
-        prompt += "5. EXCLUSIONS (Negative Logic): If the query explicitly uses NEGATIVE language (e.g., 'not', 'no', 'without', 'except'), extract those features into `negative_filters` and `negative_colors`.\n"
+        prompt += "3. **MULTI-VALUE SUPPORT**: If the user mentions multiple colors or styles (e.g., 'black and blue', 'puffer or wool'), return ALL of them as a list.\n"
+        prompt += "4. **CRITICAL: Single-value for logic**: For features that are naturally binary/boolean (e.g., 'has_buttons', 'is_quilted'), do NOT return both True and False. Pick the most likely one.\n"
+        prompt += "5. Extract values for identified features. Use exact option names (e.g., 'dark' for 'brightness').\n"
+        prompt += "6. **AVOID INFERENCE**: DO NOT infer 'brightness' or 'color_pattern' unless EXPLICITLY mentioned or very strongly implied, and only if no direct color match was found (e.g., 'dark coat' implies brightness:dark, but 'black coat' implies color:black, NOT brightness:dark or color_pattern:solid).\n"
+        prompt += "7. EXCLUSIONS (Negative Logic): If the query explicitly uses NEGATIVE language (e.g., 'not', 'no', 'without', 'except'), extract those features into `negative_filters` and `negative_colors`.\n"
         prompt += "   - Example: 'not red' -> negative_colors: ['red'] (always lowercase)\n"
-        prompt += "   - Example: 'no zipper' -> negative_filters: {'has_zipper': true}\n"
-        prompt += "6. SUGGESTIONS: If the query is VAGUE or implies a specific need without technical detail, suggest ONE attribute from the schema. The 'text' field in the suggestion object will be displayed directly to the user, so ensure it is natural, polite, and helpful.\n"
-        prompt += "7. Return JSON: \n"
+        prompt += "   - Example: 'no zipper' -> negative_filters: {'has_zipper': [true]}\n"
+        prompt += "8. SUGGESTIONS: If the query is VAGUE or implies a specific need without technical detail, suggest ONE attribute from the schema. The 'text' field in the suggestion object will be displayed directly to the user, so ensure it is natural, polite, and helpful.\n"
+        prompt += "9. Return JSON: \n"
         prompt += "   { \n"
-        prompt += "     \"filters\": {\"feature_key\": [\"value\"]}, \n"
+        prompt += "     \"filters\": {\"feature_key\": [\"value1\", \"value2\"]}, \n"
         prompt += "     \"colors\": [...], \n"
         prompt += "     \"negative_filters\": {\"feature_key\": [\"value_to_exclude\"]}, \n"
         prompt += "     \"negative_colors\": [\"Color_to_exclude\"], \n"
         prompt += "     \"suggestion\": {\"text\": \"...\", \"suggested_query\": \"...\"} \n"
         prompt += "   }\n"
-        prompt += "8. IMPORTANT: If a feature is NOT mentioned, DO NOT include it in the output. Do NOT return 'unknown'.\n"
+        prompt += "10. IMPORTANT: If a feature is NOT mentioned, DO NOT include it in the output. Do NOT return 'unknown'.\n"
         
         model = GenerativeModel("gemini-2.0-flash-lite-001")
         
@@ -457,10 +459,11 @@ def api_identify_items(image_file, box=None, user_context=None):
         {schema_guidance}
         
         INSTRUCTIONS FOR BROAD SEARCH:
-        1. **Do not be overly restrictive.** If an item's style, length, or color is ambiguous or could fit multiple categories (e.g., it looks like both a 'wool_coat' and a 'blazer'), include ALL relevant options in the list.
+        1. **Do not be overly restrictive.** If an item's style, length, or color is ambiguous or could fit multiple categories, include ALL relevant options in the list.
         2. **Multi-value support**: Return 'colors' as a list and each feature value in 'features' as a list of strings/booleans.
-        3. **CRITICAL: Single-value for logic**: For features that are naturally binary/boolean (e.g., "Has buttons") or radio-like, do NOT return both True and False. Pick the most likely one. Only return multiple values for truly multi-choice attributes like style categories or colors.
-        4. Aim to provide 1-3 likely options for ambiguous features.
+        3. **CRITICAL: Length & Ambiguity**: Features like 'length_type' or 'style_category' are often subjective or partially obscured. If an item is on the border between two options (e.g., between 'hip' and 'knee' length), you MUST include BOTH. Aim for 1-3 likely options for all select-based features.
+        4. **CRITICAL: Single-value for logic**: For features that are naturally binary/boolean (e.g., "Has buttons", "Is high waist"), do NOT return both True and False. Pick the most likely one.
+        5. Aim for a "discovery-friendly" output that shows the user all potentially matching items.
 
         Return JSON:
         {{

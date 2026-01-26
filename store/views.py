@@ -213,6 +213,7 @@ def product_list(request, category_slug=None):
              except Category.DoesNotExist:
                  pass
         
+        all_schemas = load_category_schemas()
         merged_filters = {}
         merged_colors = set()
         last_detected_category = None
@@ -263,29 +264,55 @@ def product_list(request, category_slug=None):
              is_contradictory = False
              contradiction_msg = ""
 
+             # Get schema for current context to check feature types
+             target_schema = all_schemas.get(current_context) if current_context else None
+
              # Contradiction Check 1: Current positive filters against active filters
              for k, v_list in normalized_filters.items():
-                 current_val = v_list[0] if isinstance(v_list, list) and v_list else v_list # Ensure single value
-                 if k in current_active_filters and current_active_filters[k] != current_val:
-                     is_contradictory = True
-                     contradiction_msg = f"Contradicts previous filter for '{k.replace('_', ' ')}'"
-                     break
+                 # Identify if boolean (only booleans have hard contradictions)
+                 is_boolean = False
+                 if target_schema:
+                     attr = next((a for a in target_schema.get('attributes', []) if a['key'] == k), None)
+                     if attr and attr.get('type') == 'boolean':
+                         is_boolean = True
+                 
+                 if is_boolean:
+                    current_val = v_list[0] if isinstance(v_list, list) and v_list else v_list # Ensure single value
+                    if k in current_active_filters and current_active_filters[k] != current_val:
+                        is_contradictory = True
+                        contradiction_msg = f"Contradicts previous filter for '{k.replace('_', ' ')}'"
+                        break
              
              # Contradiction Check 2: Current negative filters against active filters
              if not is_contradictory:
                 for k, v_list in normalized_neg_filters.items():
-                    current_val = v_list[0] if isinstance(v_list, list) and v_list else v_list # Ensure single value
-                    effective_val_from_neg_filter = not current_val # e.g., 'without belt' (has_belt: True) means effective False
-                    if k in current_active_filters and current_active_filters[k] != effective_val_from_neg_filter:
-                        is_contradictory = True
-                        contradiction_msg = f"Contradicts previous filter for '{k.replace('_', ' ')}'"
-                        break
+                    # Check if boolean
+                    is_boolean = False
+                    if target_schema:
+                        attr = next((a for a in target_schema.get('attributes', []) if a['key'] == k), None)
+                        if attr and attr.get('type') == 'boolean':
+                            is_boolean = True
+
+                    if is_boolean:
+                        current_val = v_list[0] if isinstance(v_list, list) and v_list else v_list # Ensure single value
+                        effective_val_from_neg_filter = not current_val # e.g., 'without belt' (has_belt: True) means effective False
+                        if k in current_active_filters and current_active_filters[k] != effective_val_from_neg_filter:
+                            is_contradictory = True
+                            contradiction_msg = f"Contradicts previous filter for '{k.replace('_', ' ')}'"
+                            break
 
              # Contradiction Check 3: Positive vs Negative within the same query
              if not is_contradictory:
                 for k, v_list in normalized_filters.items():
-                    current_val = v_list[0] if isinstance(v_list, list) and v_list else v_list
-                    if k in normalized_neg_filters:
+                    # Only check booleans for hard contradiction
+                    is_boolean = False
+                    if target_schema:
+                        attr = next((a for a in target_schema.get('attributes', []) if a['key'] == k), None)
+                        if attr and attr.get('type') == 'boolean':
+                            is_boolean = True
+
+                    if is_boolean and k in normalized_neg_filters:
+                        current_val = v_list[0] if isinstance(v_list, list) and v_list else v_list
                         neg_v_list = normalized_neg_filters[k]
                         neg_val = neg_v_list[0] if isinstance(neg_v_list, list) and neg_v_list else neg_v_list
                         if current_val != (not neg_val):
@@ -309,8 +336,12 @@ def product_list(request, category_slug=None):
                      val_list = v if isinstance(v, list) else [v]
                      for val in val_list:
                          if val not in merged_filters[k]: merged_filters[k].append(val)
-                     # Update current_active_filters for positive filters
+                     
+                     # Update current_active_filters for contradiction checking
+                     # For booleans, we store the single value. For others, we don't strictly need it for contradiction,
+                     # but we can store the first value to maintain compatibility if needed.
                      current_active_filters[k] = val_list[0]
+
                  for c in found_colors: merged_colors.add(c)
                  
                  for k, v in normalized_neg_filters.items():
@@ -318,8 +349,9 @@ def product_list(request, category_slug=None):
                      val_list = v if isinstance(v, list) else [v]
                      for val in val_list:
                          if val not in merged_negative_filters[k]: merged_negative_filters[k].append(val)
-                     # Update current_active_filters for negative filters
-                     current_active_filters[k] = not val_list[0] # Effective False for positive val_list[0]
+                     
+                     # Update current_active_filters for negative filters (effective value)
+                     current_active_filters[k] = not val_list[0]
                  for c in found_neg_colors: merged_negative_colors.add(c)
                  merged_attribute_suggestions.update(found_attribute_suggestions)
 

@@ -13,9 +13,14 @@ COLOR_MAPPING = {
     # Brown Family
     'brown': 'Brown', 'dark brown': 'Brown', 'dusty brown': 'Brown', 'golden brown': 'Brown',
     'coffee': 'Brown', 'copper': 'Brown', 'mahogany': 'Brown', 'taupe': 'Brown',
-    'beige': 'Brown', 'tan': 'Brown', 'khaki': 'Brown', 'camel': 'Brown',
-    'chocolate': 'Brown', 'sand': 'Brown', 'bronze': 'Brown', 'cocoa': 'Brown', 
-    'cinnamon': 'Brown', 'wheat': 'Brown',
+    'chocolate': 'Brown', 'bronze': 'Brown', 'cocoa': 'Brown', 
+    'cinnamon': 'Brown',
+
+    # Beige Family
+    'beige': 'Beige', 'tan': 'Beige', 'khaki': 'Beige', 'camel': 'Beige',
+    'sand': 'Beige', 'wheat': 'Beige', 'cream': 'Beige', 'nude': 'Beige', 
+    'ivory': 'Beige', 'off-white': 'Beige', 'eggshell': 'Beige', 
+    'vanilla': 'Beige', 'bone': 'Beige',
 
     # Green Family
     'olive': 'Green', 'light olive': 'Green', 'dark green': 'Green', 'dusty green': 'Green',
@@ -48,8 +53,7 @@ COLOR_MAPPING = {
     'scarlet': 'Red', 'brick red': 'Red', 'cherry': 'Red', 'wine': 'Red', 'ruby': 'Red',
 
     # White Family
-    'white': 'White', 'cream': 'White', 'nude': 'White', 'ivory': 'White', 'off-white': 'White',
-    'eggshell': 'White', 'vanilla': 'White', 'snow': 'White', 'bone': 'White',
+    'white': 'White', 'snow': 'White',
 
     # Yellow Family
     'yellow': 'Yellow', 'gold': 'Yellow', 'mustard': 'Yellow', 'canary': 'Yellow',
@@ -61,12 +65,13 @@ COLOR_MAPPING = {
 
 # The consolidated list of broad color groups Gemini is forced to pick from
 COLOR_GROUPS = [
-    "Black", "Blue", "Brown", "Green", "Grey", "Multicolor", 
+    "Beige", "Black", "Blue", "Brown", "Green", "Grey", "Multicolor", 
     "Orange", "Pink", "Purple", "Red", "White", "Yellow"
 ]
 
 # Mapping for UI color squares (Hex/CSS values) for the 12 broad groups
 COLOR_HEX_MAPPING = {
+    'Beige': '#F5F5DC',
     'Black': '#000000',
     'Blue': '#0000FF',
     'Brown': '#8B4513',
