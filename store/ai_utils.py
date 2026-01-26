@@ -448,7 +448,9 @@ def api_identify_items(image_file, box=None, user_context=None):
                 options_str = ""
                 if 'options' in attr:
                     options_str = f" (Options: {', '.join(attr['options'])})"
-                schema_guidance += f"  * {attr['key']}{options_str}\n"
+                
+                question_part = f" Description: {attr['question']}" if 'question' in attr else ""
+                schema_guidance += f"  * {attr['key']}{question_part}{options_str}\n"
 
         prompt = "Analyze the clothing worn by the person in this image. "
         if box:
