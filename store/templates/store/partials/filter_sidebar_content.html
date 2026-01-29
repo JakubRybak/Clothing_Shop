@@ -14,9 +14,30 @@
         <div class="mb-4">
             <label class="form-label fw-bold">Price Range</label>
             <div class="d-flex gap-2">
-                <input type="number" name="min_price" class="form-control" placeholder="Min" value="{{ request.GET.min_price }}">
-                <input type="number" name="max_price" class="form-control" placeholder="Max" value="{{ request.GET.max_price }}">
+                <input type="number" name="min_price" id="min-price" class="form-control" placeholder="Min" 
+                       value="{{ request.GET.min_price }}" min="0" oninput="checkPriceValidity()">
+                <input type="number" name="max_price" id="max-price" class="form-control" placeholder="Max" 
+                       value="{{ request.GET.max_price }}" min="0" oninput="checkPriceValidity()">
             </div>
+            <script>
+                function checkPriceValidity() {
+                    const minInput = document.getElementById('min-price');
+                    const maxInput = document.getElementById('max-price');
+                    const min = parseFloat(minInput.value);
+                    const max = parseFloat(maxInput.value);
+            
+                    // Clear previous errors
+                    minInput.setCustomValidity("");
+                    maxInput.setCustomValidity("");
+            
+                    // Check if both exist and logic is broken
+                    if (!isNaN(min) && !isNaN(max) && min > max) {
+                        // Setting a custom validity message marks the field as invalid 
+                        // and blocks the form submission
+                        minInput.setCustomValidity("Min price cannot be greater than Max price.");
+                    }
+                }
+            </script>
         </div>
 
         <!-- Color Filter -->

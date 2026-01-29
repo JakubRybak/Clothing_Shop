@@ -468,8 +468,33 @@ def product_list(request, category_slug=None):
 
 
     # --- Side Panel Price, Color, Size Filtering ---
-    if min_price := request.GET.get('min_price'): products = products.filter(price__gte=min_price)
-    if max_price := request.GET.get('max_price'): products = products.filter(price__lte=max_price)
+    try:
+        # 1. Get values, defaulting to None if empty
+        min_price_raw = request.GET.get('min_price')
+        max_price_raw = request.GET.get('max_price')
+
+        # 2. Convert to float only if values exist
+        min_price = float(min_price_raw) if min_price_raw else None
+        max_price = float(max_price_raw) if max_price_raw else None
+
+        # 3. Validate Non-Negative
+        if min_price is not None and min_price < 0: min_price = 0
+        if max_price is not None and max_price < 0: max_price = 0
+
+        # 4. Validate Logic (Max >= Min)
+        # Only proceed if the range is valid. If invalid (min > max), 
+        # we ignore the filter to avoid empty results for user typo.
+        if min_price is not None and max_price is not None and min_price > max_price:
+            pass 
+        else:
+            if min_price is not None:
+                products = products.filter(price__gte=min_price)
+            if max_price is not None:
+                products = products.filter(price__lte=max_price)
+
+    except ValueError:
+        # Handle cases where inputs are not valid numbers
+        pass
 
 
     all_colors_from_db = sorted(list(set(ProductVariant.objects.values_list('color', flat=True))))
