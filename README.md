@@ -29,6 +29,11 @@ Instead of relying solely on vector embeddings (which can be "fuzzy" and prone t
         *   **Features:** `darkness="dark"`, `has_belt=True`
     *   **Execution:** The backend runs a precise database filter based on these structured values.
 
+3.  **Visual Search (Image-to-Product):**
+    *   **Person Detection:** When a user uploads an image, Gemini first detects people within the frame. The user can then select the specific person they want to analyze to ensure focus and precision.
+    *   **Category & Feature Identification:** Once a person is selected, the system identifies clothing categories that exist in the shop's catalog.
+    *   **Mapping:** Finally, Gemini extracts visual features from the selected items to match them against the structured data in the database, finding the closest physical matches.
+
 This methodology uses **few-shot prompting** to ensure high precision. The result is a search experience that is strictly predictive: it eliminates "stupid errors."
 
 ### Handling Edge Cases
