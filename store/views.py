@@ -784,9 +784,18 @@ def _get_matching_products(items_data):
             colors = [item.get('color')]
 
         if colors:
-            color_q = Q()
+            # Expand the AI color (e.g. 'Blue') into all specific colors (e.g. ['navy', 'denim', ...])
+            expanded_colors = []
             for c in colors:
-                color_q |= Q(color__iexact=c)
+                specifics = [k for k, v in COLOR_MAPPING.items() if v.lower() == c.lower()]
+                expanded_colors.extend(specifics)
+                expanded_colors.append(c.lower()) # Always include the name itself
+            
+            expanded_colors = list(set(expanded_colors)) # Remove duplicates
+
+            color_q = Q()
+            for c_expanded in expanded_colors:
+                color_q |= Q(color__iexact=c_expanded)
             variant_filters &= color_q
 
         if item.get('features'):
@@ -817,10 +826,11 @@ def _get_matching_products(items_data):
         
         final_products = unique_candidates[:MAX_PRODUCTS_PER_ITEM]
         
-        # Use the 'colors' list (plural) which we extracted earlier in the function
+        # Use expanded colors for display image selection if they were generated
+        display_colors = expanded_colors if colors else [c.lower() for c in colors]
         products_with_display_images = _assign_display_images(
             final_products, 
-            [c.lower() for c in colors], 
+            display_colors, 
             []
         )
 
