@@ -195,8 +195,14 @@
     #category-sidebar {
         left: -240px;
     }
+    #category-sidebar::after {
+        display: none;
+    }
     #filter-sidebar {
         right: -240px;
+    }
+    #filter-sidebar::after {
+        display: none;
     }
 
     .content-wrapper {
@@ -224,5 +230,15 @@
 
     .product-main-img-container {
         height: 350px;
+    }
+}
+
+/* Desktop Only Enhancements */
+@media (min-width: 768px) {
+    .desktop-absolute-center {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
     }
 }

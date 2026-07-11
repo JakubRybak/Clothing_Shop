@@ -15,21 +15,14 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm sticky-top">
-        <div class="container-fluid px-2 px-md-4 position-relative">
-            <!-- Left: Visual Search -->
-            <div class="d-flex align-items-center">
-                <a class="btn btn-visual-search rounded-pill" href="{% url 'visual_search' %}">
-                    <i class="bi bi-camera me-2"></i><span class="d-none d-md-inline">Visual Search</span>
-                </a>
-            </div>
-
-            <!-- Center: Logo -->
-            <a class="navbar-brand logo-brand position-absolute top-50 start-50 translate-middle" href="{% url 'product_list' %}">
+        <div class="container-fluid px-2 px-md-4 position-relative d-flex flex-wrap align-items-center justify-content-between">
+            <!-- Left: Logo (Mobile) / Center (Desktop) -->
+            <a class="navbar-brand logo-brand order-1 order-md-2 m-0 desktop-absolute-center" href="{% url 'product_list' %}">
                 T<span class="logo-ai">AI</span>LOR
             </a>
 
             <!-- Right: Cart & Auth -->
-            <div class="navbar-nav ms-auto align-items-center flex-row gap-2 gap-md-3">
+            <div class="navbar-nav ms-auto align-items-center flex-row gap-2 gap-md-3 order-2 order-md-3">
                 <div id="menu-cart" class="d-inline-block">
                     {% include 'store/partials/menu_cart.html' %}
                 </div>
@@ -45,6 +38,13 @@
                     <a class="nav-link px-1" href="{% url 'login' %}">Login</a>
                     <a class="btn btn-primary btn-sm px-2" href="{% url 'register' %}">Register</a>
                 {% endif %}
+            </div>
+
+            <!-- Left: Visual Search (Desktop) / Bottom (Mobile) -->
+            <div class="d-flex align-items-center order-3 order-md-1 mt-2 mt-md-0 w-100 w-md-auto mobile-visual-search">
+                <a class="btn btn-visual-search rounded-pill w-100 text-center" href="{% url 'visual_search' %}">
+                    <i class="bi bi-camera me-2"></i><span>Visual Search</span>
+                </a>
             </div>
         </div>
     </nav>

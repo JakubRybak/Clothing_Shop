@@ -18,6 +18,16 @@
           hx-indicator="#search-btn">
         {% include 'store/partials/search_input_area.html' %}
     </form>
+
+    <!-- Mobile Sidebar Toggles -->
+    <div class="d-flex d-md-none justify-content-center gap-2 mt-3 w-100">
+        <button type="button" class="btn btn-outline-dark flex-fill fw-bold" onclick="toggleSidebar('category-sidebar')">
+            <i class="bi bi-list"></i> Categories
+        </button>
+        <button type="button" class="btn btn-outline-dark flex-fill fw-bold" onclick="toggleSidebar('filter-sidebar')">
+            <i class="bi bi-sliders"></i> Filters
+        </button>
+    </div>
 </div>
 
 {% include 'store/partials/smart_suggestion_alert.html' %}
