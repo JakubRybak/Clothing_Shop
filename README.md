@@ -9,7 +9,7 @@ A smarter approach to e-commerce search, deployed fully on Google Cloud Platform
 Standard e-commerce search engines (like those used by major retailers such as Zara or Reserved) often fail at understanding specific semantic negation or complex attribute combinations. 
 
 **The Problem:**
-If you search for *"coat without buttons"* (`płaszcz bez guzików`) on many platforms, you often get incorrect results—simply returning *all* coats, most of which have buttons. The search engine matches keywords but fails to understand the structural requirement of "without".
+If you search for *"not black shirt"* on many platforms, you often get incorrect results—simply returning *all* black shirts. The search engine matches keywords but fails to understand the structural requirement of "not".
 
 **My Solution: Structured Intelligence**
 Instead of relying solely on vector embeddings (which can be "fuzzy" and prone to hallucinations) or simple keyword matching, this project uses a **Deterministic AI Categorization** approach driven by Google's Gemini models via Vertex AI.
@@ -53,13 +53,6 @@ The application is built entirely on **Google Cloud Platform (GCP)**, designed f
     *   **Vertex AI:** Integrates Gemini for text analysis and image recognition.
 *   **Storage:**
     *   **Google Cloud Storage:** Stores static assets and product media.
-
-## 📊 Data Sourcing (Web Scraping)
-
-The catalog for this project was built by sourcing real-world data from existing retailers. To achieve this, I developed a custom web scraping solution specifically for Reserved.com.
-
-You can find the details and the code for the scraping process in this repository:
-👉 [Web Scraping Reserved.com](https://github.com/JakubRybak/web_scraping_reserved_com)
 
 ## 🛠️ Technology Stack
 
