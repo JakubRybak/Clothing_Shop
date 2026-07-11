@@ -91,7 +91,7 @@ def generate_product_features(product_id):
             if 'options' in attr: prompt_structure[attr['key']] += f" Options: {attr['options']}"
         prompt_text += f"Return JSON strictly matching schema:\n{json.dumps(prompt_structure)}"
 
-        model = GenerativeModel("gemini-2.0-flash-lite-001")
+        model = GenerativeModel("gemini-2.5-flash-lite")
         
         import time
         response = None
@@ -191,7 +191,7 @@ def process_search_query(user_query, current_category_name=None):
                 prompt += f"2. ONLY keep '{current_category_name}' if the query describes a FEATURE, COLOR, or STYLE (e.g. 'black', 'leather', 'belt') of {current_category_name}.\n"
                 prompt += "3. If the query implies an item that completely contradicts the current category, switch."
             
-            model = GenerativeModel("gemini-2.0-flash-lite-001")
+            model = GenerativeModel("gemini-2.5-flash-lite")
             resp = model.generate_content(prompt)
             predicted = resp.text.strip().replace("'", "").replace('"', "")
             
@@ -274,7 +274,7 @@ def process_search_query(user_query, current_category_name=None):
         prompt += "   }\n"
         prompt += "10. IMPORTANT: If a feature is NOT mentioned, DO NOT include it in the output. Do NOT return 'unknown'.\n"
         
-        model = GenerativeModel("gemini-2.0-flash-lite-001")
+        model = GenerativeModel("gemini-2.5-flash-lite")
         
         response = None
         for attempt in range(3):
@@ -419,7 +419,7 @@ def api_detect_people(image_file, user_context=None):
         }
         """
         
-        model = GenerativeModel("gemini-2.0-flash-lite-001")
+        model = GenerativeModel("gemini-2.5-flash-lite")
         response = model.generate_content([prompt, image_part], generation_config={"response_mime_type": "application/json"})
         
         text = response.text.strip()
@@ -489,7 +489,7 @@ def api_identify_items(image_file, box=None, user_context=None):
         }}
         """
         
-        model = GenerativeModel("gemini-2.0-flash-lite-001")
+        model = GenerativeModel("gemini-2.5-flash-lite")
         response = model.generate_content([prompt, image_part], generation_config={"response_mime_type": "application/json"})
         
         text = response.text.strip()
@@ -526,7 +526,7 @@ def api_detect_brightness(product_image):
             Example: {"brightness": "dark"}
             """
             
-            model = GenerativeModel("gemini-2.0-flash-lite-001")
+            model = GenerativeModel("gemini-2.5-flash-lite")
             response = model.generate_content([prompt, image_part], generation_config={"response_mime_type": "application/json"})
             
             text = response.text.strip()
