@@ -15,37 +15,75 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm sticky-top">
-        <div class="container-fluid px-2 px-md-4 position-relative d-flex flex-wrap align-items-center justify-content-between">
-            <!-- Left: Logo (Mobile) / Center (Desktop) -->
-            <a class="navbar-brand logo-brand order-1 order-md-2 m-0 desktop-absolute-center" href="{% url 'product_list' %}">
-                T<span class="logo-ai">AI</span>LOR
-            </a>
-
-            <!-- Right: Cart & Auth -->
-            <div class="navbar-nav ms-auto align-items-center flex-row gap-2 gap-md-3 order-2 order-md-3">
-                <div id="menu-cart" class="d-inline-block">
-                    {% include 'store/partials/menu_cart.html' %}
+        <div class="container-fluid px-2 px-md-4 position-relative">
+            
+            <!-- DESKTOP NAVBAR (Hidden on mobile) -->
+            <div class="d-none d-md-flex w-100 justify-content-between align-items-center">
+                <!-- Left: Visual Search -->
+                <div class="d-flex align-items-center">
+                    <a class="btn btn-visual-search rounded-pill" href="{% url 'visual_search' %}">
+                        <i class="bi bi-camera me-2"></i><span>Visual Search</span>
+                    </a>
                 </div>
-                {% if user.is_authenticated %}
-                    <span class="navbar-text text-white small me-2 d-none d-md-inline">
-                        Hi, <strong>{{ user.username }}</strong>
-                    </span>
-                    <form action="{% url 'logout' %}" method="post" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
-                    </form>
-                {% else %}
-                    <a class="nav-link px-1" href="{% url 'login' %}">Login</a>
-                    <a class="btn btn-primary btn-sm px-2" href="{% url 'register' %}">Register</a>
-                {% endif %}
+
+                <!-- Center: Logo -->
+                <a class="navbar-brand logo-brand position-absolute top-50 start-50 translate-middle m-0" href="{% url 'product_list' %}">
+                    T<span class="logo-ai">AI</span>LOR
+                </a>
+
+                <!-- Right: Cart & Auth -->
+                <div class="navbar-nav ms-auto align-items-center gap-3">
+                    <div id="menu-cart" class="d-inline-block">
+                        {% include 'store/partials/menu_cart.html' %}
+                    </div>
+                    {% if user.is_authenticated %}
+                        <span class="navbar-text text-white small me-2">
+                            Hi, <strong>{{ user.username }}</strong>
+                        </span>
+                        <form action="{% url 'logout' %}" method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                        </form>
+                    {% else %}
+                        <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        <a class="btn btn-primary btn-sm" href="{% url 'register' %}">Register</a>
+                    {% endif %}
+                </div>
             </div>
 
-            <!-- Left: Visual Search (Desktop) / Bottom (Mobile) -->
-            <div class="d-flex align-items-center order-3 order-md-1 mt-2 mt-md-0 w-100 w-md-auto mobile-visual-search">
-                <a class="btn btn-visual-search rounded-pill w-100 text-center" href="{% url 'visual_search' %}">
-                    <i class="bi bi-camera me-2"></i><span>Visual Search</span>
-                </a>
+            <!-- MOBILE NAVBAR (Hidden on desktop) -->
+            <div class="d-flex d-md-none flex-column w-100">
+                <!-- Top Row: Logo & Right Items -->
+                <div class="d-flex justify-content-between align-items-center w-100 mb-2">
+                    <a class="navbar-brand logo-brand m-0" href="{% url 'product_list' %}">
+                        T<span class="logo-ai">AI</span>LOR
+                    </a>
+                    
+                    <div class="navbar-nav flex-row align-items-center gap-2">
+                        <!-- Note: Mobile cart uses hx-swap-oob from server so ID is needed -->
+                        <div id="menu-cart-mobile" class="d-inline-block" hx-swap-oob="true">
+                            {% include 'store/partials/menu_cart.html' %}
+                        </div>
+                        {% if user.is_authenticated %}
+                            <form action="{% url 'logout' %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-light btn-sm">Logout</button>
+                            </form>
+                        {% else %}
+                            <a class="nav-link px-1" href="{% url 'login' %}">Login</a>
+                            <a class="btn btn-primary btn-sm px-2" href="{% url 'register' %}">Register</a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Bottom Row: Visual Search -->
+                <div class="w-100">
+                    <a class="btn btn-visual-search rounded-pill w-100 text-center" href="{% url 'visual_search' %}">
+                        <i class="bi bi-camera me-2"></i><span>Visual Search</span>
+                    </a>
+                </div>
             </div>
+
         </div>
     </nav>
 
