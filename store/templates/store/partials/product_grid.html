@@ -8,9 +8,9 @@
                 {% with detail_url=base_url|url_params:product.display_variant_params %}
                     <a href="{{ detail_url }}" class="text-decoration-none text-dark">
                         {% if product.display_image %}
-                            <img src="{{ product.display_image.image.url }}" class="card-img-top bg-light" alt="{{ product.name }}" style="height: 350px; object-fit: contain;">
+                            <img src="{{ product.display_image.image.url }}" class="card-img-top bg-light product-grid-img" alt="{{ product.name }}">
                         {% else %}
-                            <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="height: 350px;">     
+                            <div class="d-flex align-items-center justify-content-center bg-secondary text-white product-grid-img">     
                                 No Image
                             </div>
                         {% endif %}
@@ -24,9 +24,9 @@
             {% else %}
                 <a href="{% url 'product_detail' product.slug %}" class="text-decoration-none text-dark">
                     {% if product.display_image %}
-                        <img src="{{ product.display_image.image.url }}" class="card-img-top bg-light" alt="{{ product.name }}" style="height: 350px; object-fit: contain;">
+                        <img src="{{ product.display_image.image.url }}" class="card-img-top bg-light product-grid-img" alt="{{ product.name }}">
                     {% else %}
-                        <div class="d-flex align-items-center justify-content-center bg-secondary text-white" style="height: 350px;">
+                        <div class="d-flex align-items-center justify-content-center bg-secondary text-white product-grid-img">
                             No Image
                         </div>
                     {% endif %}

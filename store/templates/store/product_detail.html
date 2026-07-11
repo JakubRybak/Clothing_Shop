@@ -18,7 +18,7 @@
 
     {% with images.first as main_image %}
         {% if main_image %}
-            <div class="position-relative bg-light rounded shadow overflow-hidden" style="height: 500px;">
+            <div class="position-relative bg-light rounded shadow overflow-hidden product-main-img-container">
                 <img id="main-image" src="{{ main_image.image.url }}" 
                      class="w-100 h-100" 
                      style="object-fit: contain;" 
@@ -37,7 +37,7 @@
                 {% endfor %}
             </div>
         {% else %}
-            <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 400px;">
+            <div class="bg-secondary text-white d-flex align-items-center justify-content-center product-main-img-container">
                 No Image Available
             </div>
         {% endif %}

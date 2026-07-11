@@ -19,7 +19,7 @@
             <!-- Left: Visual Search -->
             <div class="d-flex align-items-center">
                 <a class="btn btn-visual-search rounded-pill" href="{% url 'visual_search' %}">
-                    <i class="bi bi-camera me-2"></i>Visual Search
+                    <i class="bi bi-camera me-2"></i><span class="d-none d-md-inline">Visual Search</span>
                 </a>
             </div>
 
@@ -34,7 +34,7 @@
                     {% include 'store/partials/menu_cart.html' %}
                 </div>
                 {% if user.is_authenticated %}
-                    <span class="navbar-text text-white small me-2">
+                    <span class="navbar-text text-white small me-2 d-none d-md-inline">
                         Hi, <strong>{{ user.username }}</strong>
                     </span>
                     <form action="{% url 'logout' %}" method="post" class="d-inline">

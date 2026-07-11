@@ -179,3 +179,38 @@
     filter: drop-shadow(0 0 8px rgba(0, 114, 255, 0.6)); /* Glow effect */
     font-size: 3.2rem; /* Slightly larger */
 }
+
+/* Responsive Image Containers */
+.product-grid-img {
+    height: 350px;
+    object-fit: contain;
+}
+
+.product-main-img-container {
+    height: 500px;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+    
+    .navbar-brand.logo-brand {
+        font-size: 1.8rem;
+        letter-spacing: 2px;
+    }
+
+    .logo-ai {
+        font-size: 2rem;
+    }
+
+    .product-grid-img {
+        height: 250px;
+    }
+
+    .product-main-img-container {
+        height: 350px;
+    }
+}
