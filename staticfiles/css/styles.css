@@ -192,30 +192,18 @@
 
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
-    #category-sidebar {
-        left: -240px;
-    }
-    #filter-sidebar {
-        right: -240px;
-    }
-
     .content-wrapper {
-        padding-left: 5px;
-        padding-right: 5px;
+        padding-left: 10px;
+        padding-right: 10px;
     }
     
     .navbar-brand.logo-brand {
-        font-size: 1.4rem;
-        letter-spacing: 1px;
+        font-size: 1.8rem;
+        letter-spacing: 2px;
     }
 
     .logo-ai {
-        font-size: 1.5rem;
-    }
-
-    .btn-visual-search {
-        padding: 6px 12px;
-        font-size: 0.8rem;
+        font-size: 2rem;
     }
 
     .product-grid-img {
